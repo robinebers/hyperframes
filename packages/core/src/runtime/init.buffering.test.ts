@@ -227,6 +227,52 @@ it("a hold for data does not reload a later clip", () => {
   expect(load.mock.contexts.filter((el) => el === later).length).toBe(before);
 });
 
+function laterClipHoldingARequest() {
+  const later = document.getElementById("later") as HTMLVideoElement;
+  Object.defineProperties(later, {
+    readyState: { get: () => 1, configurable: true },
+    networkState: { get: () => 2, configurable: true },
+  });
+  const srcWrites = new MutationObserver(() => {});
+  srcWrites.observe(later, { attributeFilter: ["src"] });
+  return { later, srcWrites };
+}
+
+it("a hold whose clip gets no data for 5 s frees the clips not due, whose open requests can fill the connection", () => {
+  const { voice, voiceReady, playFor } = playPodcast(
+    0,
+    "video",
+    '<video id="later" data-start="9" data-duration="1" src="/later.mp4"></video>',
+  );
+  const { later, srcWrites } = laterClipHoldingARequest();
+
+  playFor(4);
+  expect(srcWrites.takeRecords()).toHaveLength(0);
+  playFor(1.5);
+  expect(srcWrites.takeRecords().length).toBeGreaterThan(0);
+  expect([later.preload, later.getAttribute("src")]).toEqual(["none", "/later.mp4"]);
+  expect(voice.getAttribute("src")).toBe("/voice.m4a");
+
+  voiceReady.value = 4;
+  playFor(1);
+  expect(window.__player!.getTime()).toBeGreaterThan(0.9);
+});
+
+it("a hold whose clip is still receiving data frees nothing", () => {
+  const { voiceReady, playFor } = playPodcast(
+    0,
+    "video",
+    '<video id="later" data-start="9" data-duration="1" src="/later.mp4"></video>',
+  );
+  const { srcWrites } = laterClipHoldingARequest();
+
+  for (let s = 1; s <= 8; s++) {
+    voiceReady.bufferedTo = s * 0.05;
+    playFor(1);
+  }
+  expect(srcWrites.takeRecords()).toHaveLength(0);
+});
+
 it("a film held for data reads as choppy, so the app can lower it", () => {
   const reports: Array<{ choppy: boolean; waitingShare: number; heldBy: unknown }> = [];
   const { voiceReady, playFor } = playPodcast(0, "video");
