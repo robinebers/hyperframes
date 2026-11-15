@@ -6194,6 +6194,32 @@ export function initSandboxRuntimeModular(): void {
           )
           .map(({ el }) => el);
 
+  const HELD_WITHOUT_PROGRESS_MS = 5000;
+  const loadProgress = (els: HTMLMediaElement[]) =>
+    els
+      .map((el) => {
+        let seconds = 0;
+        for (let i = 0; i < el.buffered.length; i++)
+          seconds += el.buffered.end(i) - el.buffered.start(i);
+        return `${el.readyState}:${seconds}`;
+      })
+      .join();
+  let heldProgress = { held: bufferingFor, mark: "", sinceMs: 0 };
+  const releaseMediaHoldingTheConnection = () => {
+    const nowMs = performance.now();
+    const mark = loadProgress(bufferingFor);
+    if (heldProgress.held !== bufferingFor || heldProgress.mark !== mark)
+      heldProgress = { held: bufferingFor, mark, sinceMs: nowMs };
+    if (nowMs - heldProgress.sinceMs < HELD_WITHOUT_PROGRESS_MS) return;
+    heldProgress.sinceMs = nowMs;
+    for (const { el, start, end } of resolveMediaClipIndex().clips) {
+      if (bufferingFor.includes(el) || isInClipWindow(state.currentTime, start, end)) continue;
+      if (el.readyState === 0 && el.networkState !== 2) continue;
+      el.preload = "none";
+      withoutOwnTimingRecords(el, () => releaseMedia(el));
+    }
+  };
+
   const transportTick = () => {
     if (state.tornDown || inTransportTick) return;
     inTransportTick = true;
@@ -6381,6 +6407,8 @@ export function initSandboxRuntimeModular(): void {
         !mediaNotReadyAt(state.currentTime, canResumeFrom).some((el) => bufferingFor.includes(el))
       ) {
         transport.play();
+      } else if (bufferingFor.length > 0) {
+        releaseMediaHoldingTheConnection();
       }
       postState(false);
     } finally {
