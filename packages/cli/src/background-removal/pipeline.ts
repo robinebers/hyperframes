@@ -24,7 +24,6 @@ import { createSession, type Session } from "./inference.js";
 import { type Device, type ModelId } from "./manager.js";
 import {
   DEFAULT_VP9_CPU_USED,
-  SDR_RGB_TO_BT709_FILTER,
   SDR_RGB_TO_TAGGED_BT709_FILTER,
   renderProvenanceArgs,
 } from "@hyperframes/engine";
@@ -195,6 +194,15 @@ async function probeMedia(inputPath: string): Promise<MediaInfo> {
   };
 }
 
+const ROUNDED_NOT_TRUNCATED_RGB24_FILTER = "scale=flags=accurate_rnd+full_chroma_int,format=rgb24";
+
+export function buildDecoderArgs(inputPath: string): string[] {
+  return [
+    ...["-loglevel", "error", "-i", inputPath, "-vf", ROUNDED_NOT_TRUNCATED_RGB24_FILTER],
+    ...["-f", "rawvideo", "-pix_fmt", "rgb24", "-an", "-"],
+  ];
+}
+
 export function buildEncoderArgs(
   format: OutputFormat,
   width: number,
@@ -221,7 +229,7 @@ export function buildEncoderArgs(
     return [
       ...base,
       "-vf",
-      SDR_RGB_TO_BT709_FILTER,
+      SDR_RGB_TO_TAGGED_BT709_FILTER,
       "-c:v",
       "libvpx-vp9",
       "-b:v",
@@ -433,12 +441,11 @@ async function runPipeline(
   const frameBytes = width * height * 3;
   const quality = options.quality ?? DEFAULT_QUALITY;
 
-  const decoder = spawnFfmpeg(
-    ffmpegPath,
-    ["-loglevel", "error", "-i", inputPath, "-f", "rawvideo", "-pix_fmt", "rgb24", "-an", "-"],
-    "ffmpeg decoder",
-    ["ignore", "pipe", "pipe"],
-  );
+  const decoder = spawnFfmpeg(ffmpegPath, buildDecoderArgs(inputPath), "ffmpeg decoder", [
+    "ignore",
+    "pipe",
+    "pipe",
+  ]);
 
   const fg = spawnFfmpeg(
     ffmpegPath,
