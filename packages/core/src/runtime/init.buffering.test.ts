@@ -315,6 +315,36 @@ it("a seek during a hold is not undone when a clip the hold reloaded loads later
   expect(music.currentTime).toBe(landed);
 });
 
+it("a hold keeps a video on screen as it is, so its picture stays, and still reloads the audio", () => {
+  vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+  const { music, voiceReady, playFor } = playPodcast(
+    0,
+    "audio",
+    '<video id="cam" data-track-index="1" data-start="0" data-duration="10" src="/cam.mp4"></video>',
+  );
+  const cam = audio("cam", 10, { value: 4 });
+  for (const el of [music, cam])
+    Object.defineProperty(el, "played", { get: () => ({ length: 1 }), configurable: true });
+  voiceReady.value = 4;
+  playFor(1);
+  const preload = cam.preload;
+  const camSrcWrites = new MutationObserver(() => {});
+  camSrcWrites.observe(cam, { attributeFilter: ["src"] });
+  const musicSrcWrites = new MutationObserver(() => {});
+  musicSrcWrites.observe(music, { attributeFilter: ["src"] });
+
+  voiceReady.value = 1;
+  playFor(0.5);
+  expect(camSrcWrites.takeRecords()).toHaveLength(0);
+  expect(cam.preload).toBe(preload);
+  expect(musicSrcWrites.takeRecords().length).toBeGreaterThan(0);
+
+  voiceReady.value = 4;
+  const heldAt = window.__player!.getTime();
+  playFor(1);
+  expect(window.__player!.getTime()).toBeGreaterThan(heldAt + 0.9);
+});
+
 it("a hold for data does not reload a later clip", () => {
   const load = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
   const mark = document.createElement("meta");
