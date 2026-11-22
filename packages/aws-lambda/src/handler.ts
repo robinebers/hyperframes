@@ -71,6 +71,13 @@ import {
 import { S3PlanV2ArtifactPublisher } from "./s3PlanV2Publisher.js";
 import { downloadSiteFiles, isSiteManifestUri } from "./siteManifest.js";
 
+/** The lengths an export reads from a media file, for a caller that measures files the way the export does. */
+export {
+  extractAudioMetadata,
+  extractMediaMetadata,
+  resolvePlayableVideoDuration,
+} from "@hyperframes/engine";
+
 /**
  * Lazily-constructed S3 client. Cached at module scope so warm Lambda
  * containers reuse the underlying HTTP keep-alive pool across invocations.
