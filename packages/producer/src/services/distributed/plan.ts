@@ -50,6 +50,7 @@ import {
   type DistributedFps,
   fpsToNumber,
   HF_COLOR_GRADING_ATTR,
+  parseStartExpression,
 } from "@hyperframes/core";
 import { isSafePath } from "@hyperframes/core/safe-path";
 import {
@@ -1430,11 +1431,20 @@ async function compilePlanComposition(
     logPlanStage(log, "reference_background", stageStarted);
   }
   compiled = probeResult.compiled;
-  // Sound is mixed from composition.audios, so chunks capture a page without <audio>. Each one would hold a
-  // Chrome media player, about a thread per element in every capture browser, and Lambda allows 1,024 threads.
+  // Sound is mixed from composition.audios, so chunks capture a page without <audio>, except the ones a data-start
+  // names. Each would hold a Chrome media player, about a thread per element in every capture browser, and Lambda
+  // allows 1,024 threads.
   if (/<audio\b/i.test(compiled.html)) {
     const { document } = parseHTML(compiled.html);
-    for (const audio of document.querySelectorAll("audio")) audio.remove();
+    const referenced = new Set(
+      Array.from(document.querySelectorAll("[data-start]"), (element) => {
+        const start = parseStartExpression(element.getAttribute("data-start"));
+        return start?.kind === "reference" ? start.refId : null;
+      }),
+    );
+    for (const audio of document.querySelectorAll("audio")) {
+      if (!referenced.has(audio.id)) audio.remove();
+    }
     compiled = { ...compiled, html: document.toString() };
     writeFileSync(join(compiledDir, "index.html"), compiled.html, "utf-8");
   }
