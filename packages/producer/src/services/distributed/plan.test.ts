@@ -1021,7 +1021,7 @@ describe("plan() — golden planDir + planHash determinism", () => {
   );
 
   it.skipIf(!HAS_FFMPEG)(
-    "keeps the probed duration on a capture page whose length came only from removed audio",
+    "leaves the audio of a page whose root declares no length",
     async () => {
       const projectDir = join(runRoot, "project-audio-length");
       mkdirSync(projectDir, { recursive: true });
@@ -1054,10 +1054,13 @@ describe("plan() — golden planDir + planHash determinism", () => {
       await plan(projectDir, { fps: 30, width: 320, height: 240, format: "mp4" }, planDir);
       const compiledHtml = readFileSync(join(planDir, "compiled", "index.html"), "utf-8");
       const { document } = parseHTML(compiledHtml);
-      expect(document.querySelector("audio")).toBeNull();
+      expect(Array.from(document.querySelectorAll("audio"), (audio) => audio.id)).toEqual([
+        "intro",
+        "outro",
+      ]);
       expect(
-        document.querySelector('[data-composition-id="root"]')?.getAttribute("data-duration"),
-      ).toBe("2");
+        document.querySelector('[data-composition-id="root"]')?.hasAttribute("data-duration"),
+      ).toBe(false);
     },
     TIMEOUT_MS,
   );

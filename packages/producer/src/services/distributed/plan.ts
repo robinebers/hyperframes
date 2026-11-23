@@ -1433,30 +1433,35 @@ async function compilePlanComposition(
   compiled = probeResult.compiled;
   // Sound is mixed from composition.audios, so chunks capture a page without <audio>, except the ones another
   // element's data-start needs, directly or through other audio. Each would hold a Chrome media player, about a
-  // thread per element in every capture browser, and Lambda allows 1,024 threads.
+  // thread per element in every capture browser, and Lambda allows 1,024 threads. A page whose root declares no
+  // length keeps its audio, because the runtime may take the length from it.
   if (/<audio\b/i.test(compiled.html)) {
     const { document } = parseHTML(compiled.html);
-    const referenceOf = (element: Element) => {
-      const start = parseStartExpression(element.getAttribute("data-start"));
-      return start?.kind === "reference" ? start.refId : null;
-    };
-    const audios = Array.from(document.querySelectorAll("audio"));
-    const needed = new Set(
-      Array.from(document.querySelectorAll("[data-start]"))
-        .filter((element) => element.localName !== "audio")
-        .map(referenceOf),
-    );
-    for (let size = -1; size !== needed.size; ) {
-      size = needed.size;
-      for (const audio of audios) if (needed.has(audio.id)) needed.add(referenceOf(audio));
+    const declaresLength = (root: Element | null) =>
+      Number(root?.getAttribute("data-duration")) > 0;
+    const dataRoot = document.querySelector('[data-root="true"]');
+    if (
+      declaresLength(document.querySelector("[data-composition-id]")) &&
+      (dataRoot === null || declaresLength(dataRoot))
+    ) {
+      const referenceOf = (element: Element) => {
+        const start = parseStartExpression(element.getAttribute("data-start"));
+        return start?.kind === "reference" ? start.refId : null;
+      };
+      const audios = Array.from(document.querySelectorAll("audio"));
+      const needed = new Set(
+        Array.from(document.querySelectorAll("[data-start]"))
+          .filter((element) => element.localName !== "audio")
+          .map(referenceOf),
+      );
+      for (let size = -1; size !== needed.size; ) {
+        size = needed.size;
+        for (const audio of audios) if (needed.has(audio.id)) needed.add(referenceOf(audio));
+      }
+      for (const audio of audios) if (!needed.has(audio.id)) audio.remove();
+      compiled = { ...compiled, html: document.toString() };
+      writeFileSync(join(compiledDir, "index.html"), compiled.html, "utf-8");
     }
-    for (const audio of audios) if (!needed.has(audio.id)) audio.remove();
-    const root = document.querySelector("[data-composition-id]");
-    if (root && !(Number(root.getAttribute("data-duration")) > 0)) {
-      root.setAttribute("data-duration", String(probeResult.duration));
-    }
-    compiled = { ...compiled, html: document.toString() };
-    writeFileSync(join(compiledDir, "index.html"), compiled.html, "utf-8");
   }
   job.strictVariablesChecked = probeResult.strictVariablesChecked;
   job.duration = probeResult.duration;
