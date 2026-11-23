@@ -1451,6 +1451,10 @@ async function compilePlanComposition(
       for (const audio of audios) if (needed.has(audio.id)) needed.add(referenceOf(audio));
     }
     for (const audio of audios) if (!needed.has(audio.id)) audio.remove();
+    const root = document.querySelector("[data-composition-id]");
+    if (root && !(Number(root.getAttribute("data-duration")) > 0)) {
+      root.setAttribute("data-duration", String(probeResult.duration));
+    }
     compiled = { ...compiled, html: document.toString() };
     writeFileSync(join(compiledDir, "index.html"), compiled.html, "utf-8");
   }
