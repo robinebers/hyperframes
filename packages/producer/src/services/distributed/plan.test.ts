@@ -28,6 +28,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseHTML } from "linkedom";
 import {
   applyConcreteGpuScreenshotClamp,
   _setDownloadFetchForTests,
@@ -1015,6 +1016,48 @@ describe("plan() — golden planDir + planHash determinism", () => {
       expect(
         compiledHtml.match(/<audio\b[^>]*>/g)?.map((tag) => /id="(\w+)"/.exec(tag)?.[1]),
       ).toEqual(["lead", "cue"]);
+    },
+    TIMEOUT_MS,
+  );
+
+  it.skipIf(!HAS_FFMPEG)(
+    "keeps the probed duration on a capture page whose length came only from removed audio",
+    async () => {
+      const projectDir = join(runRoot, "project-audio-length");
+      mkdirSync(projectDir, { recursive: true });
+      ffmpegOrThrow([
+        "-f",
+        "lavfi",
+        "-i",
+        "anullsrc=channel_layout=mono:sample_rate=44100",
+        "-t",
+        "1",
+        "-c:a",
+        "pcm_s16le",
+        join(projectDir, "silence.wav"),
+      ]);
+      writeFileSync(
+        join(projectDir, "index.html"),
+        `<!doctype html>
+<html><head><meta charset="utf-8"></head><body>
+  <div data-composition-id="root" data-width="320" data-height="240">
+    <audio id="intro" src="silence.wav" data-start="0"></audio>
+    <audio id="outro" src="silence.wav" data-start="intro"></audio>
+    <p>cover</p>
+  </div>
+</body></html>`,
+        "utf-8",
+      );
+
+      const planDir = join(runRoot, "plan-audio-length");
+      mkdirSync(planDir, { recursive: true });
+      await plan(projectDir, { fps: 30, width: 320, height: 240, format: "mp4" }, planDir);
+      const compiledHtml = readFileSync(join(planDir, "compiled", "index.html"), "utf-8");
+      const { document } = parseHTML(compiledHtml);
+      expect(document.querySelector("audio")).toBeNull();
+      expect(
+        document.querySelector('[data-composition-id="root"]')?.getAttribute("data-duration"),
+      ).toBe("2");
     },
     TIMEOUT_MS,
   );
