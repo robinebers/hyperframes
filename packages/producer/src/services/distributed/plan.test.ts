@@ -982,7 +982,8 @@ describe("plan() — golden planDir + planHash determinism", () => {
 <html><head><meta charset="utf-8"></head><body>
   <div data-composition-id="root" data-width="320" data-height="240" data-duration="1">
     <audio data-composition-audio src="silence.wav"></audio>
-    <p>audio-bearing fixture</p>
+    <audio id="cue" src="silence.wav" data-start="0" data-duration="0.5"></audio>
+    <p data-start="cue">audio-bearing fixture</p>
   </div>
 </body></html>`,
         "utf-8",
@@ -1006,10 +1007,9 @@ describe("plan() — golden planDir + planHash determinism", () => {
       // pins the wrong path — the same false-pass mode as the
       // no-audio variant above).
       expect(existsSync(join(planDir, "audio.m4a"))).toBe(true);
-      // The chunks' page carries no <audio>: its sound is the mix above.
-      expect(readFileSync(join(planDir, "compiled", "index.html"), "utf-8")).not.toContain(
-        "<audio",
-      );
+      // The chunks' page keeps only the <audio> a data-start names: its sound is the mix above.
+      const compiledHtml = readFileSync(join(planDir, "compiled", "index.html"), "utf-8");
+      expect(compiledHtml.match(/<audio\b[^>]*>/g)).toEqual([expect.stringContaining('id="cue"')]);
     },
     TIMEOUT_MS,
   );
