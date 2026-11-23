@@ -1006,6 +1006,10 @@ describe("plan() — golden planDir + planHash determinism", () => {
       // pins the wrong path — the same false-pass mode as the
       // no-audio variant above).
       expect(existsSync(join(planDir, "audio.m4a"))).toBe(true);
+      // The chunks' page carries no <audio>: its sound is the mix above.
+      expect(readFileSync(join(planDir, "compiled", "index.html"), "utf-8")).not.toContain(
+        "<audio",
+      );
     },
     TIMEOUT_MS,
   );
