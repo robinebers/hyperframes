@@ -1431,20 +1431,26 @@ async function compilePlanComposition(
     logPlanStage(log, "reference_background", stageStarted);
   }
   compiled = probeResult.compiled;
-  // Sound is mixed from composition.audios, so chunks capture a page without <audio>, except the ones a data-start
-  // names. Each would hold a Chrome media player, about a thread per element in every capture browser, and Lambda
-  // allows 1,024 threads.
+  // Sound is mixed from composition.audios, so chunks capture a page without <audio>, except the ones another
+  // element's data-start needs, directly or through other audio. Each would hold a Chrome media player, about a
+  // thread per element in every capture browser, and Lambda allows 1,024 threads.
   if (/<audio\b/i.test(compiled.html)) {
     const { document } = parseHTML(compiled.html);
-    const referenced = new Set(
-      Array.from(document.querySelectorAll("[data-start]"), (element) => {
-        const start = parseStartExpression(element.getAttribute("data-start"));
-        return start?.kind === "reference" ? start.refId : null;
-      }),
+    const referenceOf = (element: Element) => {
+      const start = parseStartExpression(element.getAttribute("data-start"));
+      return start?.kind === "reference" ? start.refId : null;
+    };
+    const audios = Array.from(document.querySelectorAll("audio"));
+    const needed = new Set(
+      Array.from(document.querySelectorAll("[data-start]"))
+        .filter((element) => element.localName !== "audio")
+        .map(referenceOf),
     );
-    for (const audio of document.querySelectorAll("audio")) {
-      if (!referenced.has(audio.id)) audio.remove();
+    for (let size = -1; size !== needed.size; ) {
+      size = needed.size;
+      for (const audio of audios) if (needed.has(audio.id)) needed.add(referenceOf(audio));
     }
+    for (const audio of audios) if (!needed.has(audio.id)) audio.remove();
     compiled = { ...compiled, html: document.toString() };
     writeFileSync(join(compiledDir, "index.html"), compiled.html, "utf-8");
   }

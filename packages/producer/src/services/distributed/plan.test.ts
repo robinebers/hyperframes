@@ -982,7 +982,10 @@ describe("plan() — golden planDir + planHash determinism", () => {
 <html><head><meta charset="utf-8"></head><body>
   <div data-composition-id="root" data-width="320" data-height="240" data-duration="1">
     <audio data-composition-audio src="silence.wav"></audio>
-    <audio id="cue" src="silence.wav" data-start="0" data-duration="0.5"></audio>
+    <audio id="lead" src="silence.wav" data-start="0" data-duration="0.25"></audio>
+    <audio id="cue" src="silence.wav" data-start="lead" data-duration="0.25"></audio>
+    <audio id="bed" src="silence.wav" data-start="0" data-duration="0.25"></audio>
+    <audio id="tail" src="silence.wav" data-start="bed" data-duration="0.25"></audio>
     <p data-start="cue">audio-bearing fixture</p>
   </div>
 </body></html>`,
@@ -1007,9 +1010,11 @@ describe("plan() — golden planDir + planHash determinism", () => {
       // pins the wrong path — the same false-pass mode as the
       // no-audio variant above).
       expect(existsSync(join(planDir, "audio.m4a"))).toBe(true);
-      // The chunks' page keeps only the <audio> a data-start names: its sound is the mix above.
+      // The chunks' page keeps only the <audio> the scene's data-start needs: its sound is the mix above.
       const compiledHtml = readFileSync(join(planDir, "compiled", "index.html"), "utf-8");
-      expect(compiledHtml.match(/<audio\b[^>]*>/g)).toEqual([expect.stringContaining('id="cue"')]);
+      expect(
+        compiledHtml.match(/<audio\b[^>]*>/g)?.map((tag) => /id="(\w+)"/.exec(tag)?.[1]),
+      ).toEqual(["lead", "cue"]);
     },
     TIMEOUT_MS,
   );
