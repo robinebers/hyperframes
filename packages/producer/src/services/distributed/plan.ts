@@ -44,6 +44,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { extname, isAbsolute, join, relative, sep } from "node:path";
+import { parseHTML } from "linkedom";
 import {
   type CanvasResolution,
   type DistributedFps,
@@ -1429,6 +1430,14 @@ async function compilePlanComposition(
     logPlanStage(log, "reference_background", stageStarted);
   }
   compiled = probeResult.compiled;
+  // Sound is mixed from composition.audios, so chunks capture a page without <audio>. Each one would hold a
+  // Chrome media player, about a thread per element in every capture browser, and Lambda allows 1,024 threads.
+  if (/<audio\b/i.test(compiled.html)) {
+    const { document } = parseHTML(compiled.html);
+    for (const audio of document.querySelectorAll("audio")) audio.remove();
+    compiled = { ...compiled, html: document.toString() };
+    writeFileSync(join(compiledDir, "index.html"), compiled.html, "utf-8");
+  }
   job.strictVariablesChecked = probeResult.strictVariablesChecked;
   job.duration = probeResult.duration;
   job.totalFrames = probeResult.totalFrames;
