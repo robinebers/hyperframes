@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # One command for a new head of the patch.
 # usage: rerun.sh <new-head> [name]      e.g. rerun.sh origin/spike/host-media final
-# Env: DROP_FOR_PR=<sha>  a commit of the head that pull request #8636 already contains (dropped for that rebase only)
+# Env: DROP=<sha>         a commit of the head to leave out of the whole measurement (dropped before the walk)
+#      DROP_FOR_PR=<sha>  a commit of the head that pull request #8636 already contains (dropped for that rebase only)
 # Needs: the upstream remote, a worktree $WT (default /workspace/wt-check) with bun available.
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -9,6 +10,11 @@ WT=${WT:-/workspace/wt-check}
 NEW=$(git rev-parse "$1"); NAME=${2:-$(git rev-parse --short=7 "$NEW")}
 OUT=$HERE/versions-$NAME; RES=$HERE/results-$NAME; mkdir -p "$RES"
 git merge-base --is-ancestor efef865 "$NEW" || { echo "new head is not on efef865; the stored versions start there"; exit 2; }
+if [ -n "${DROP:-}" ]; then
+  r=$(git merge-tree --write-tree --merge-base="$DROP" "$NEW" "$DROP^") || { echo "cannot drop $DROP cleanly"; exit 2; }
+  NEW=$(git commit-tree "$(echo "$r" | head -1)" -p efef865 -m "$1 without $DROP")
+fi
+echo "measuring $1 as $NEW ($(git diff --shortstat efef865 "$NEW"))"
 # 1. walk the new head back, replaying stored hand resolutions (stops on an unknown conflict)
 "$HERE/extend-all.sh" "$NEW" "$OUT"
 mk(){ d=$(mktemp -d); GIT_INDEX_FILE=$d/i git read-tree "$1" && GIT_INDEX_FILE=$d/i git apply --cached "$2" \

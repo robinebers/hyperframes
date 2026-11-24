@@ -12,7 +12,9 @@ GIT_LFS_SKIP_SMUDGE=1 git fetch --filter=blob:none --shallow-since=2026-10-20 up
 GIT_LFS_SKIP_SMUDGE=1 git fetch --filter=blob:none upstream 'refs/tags/v0.9.*:refs/tags/v0.9.*'
 git worktree add --detach /workspace/wt-check efef865 && (cd /workspace/wt-check && bun install)
 git config rerere.enabled false
-DROP_FOR_PR=<sha of the audio-clock commit> carry-measure/rerun.sh origin/spike/host-media final
+DROP_FOR_PR=4d1501883 carry-measure/rerun.sh a362d51f8 full10          # whole patch, ten commits
+DROP_FOR_PR=4d1501883 carry-measure/rerun.sh d60dbefc8 nopix           # without pixel readers and grade
+DROP=4d1501883        carry-measure/rerun.sh d60dbefc8 noac7           # and without audio-clock
 ```
 
 `rerun.sh <head> <name>`:
@@ -40,6 +42,8 @@ Mode a takes about an hour on a 2-CPU machine (83 steps, each with a type-check 
 | walkback.tsv, walk-measure.tsv, walk-notes.md, walkback-sites.txt | the walk-back record |
 | results/ | forward replay of head cd9f723 (mode-a, mode-b = weeks from 27 Oct, mode-b-mondays, mode-c, variant-v1-mode-a) |
 | results-4d15018-smoke/ | smoke run of rerun.sh on head 4d15018, mode b and today only |
+| versions-{full10,nopix,noac7}/, results-{full10,nopix,noac7}/ | final run on head a362d51f8 and its variants (main result) |
+| res/*.sh | stored hand resolutions per optional commit: audio-clock, hold-progress, loop-wrap, pixel-readers |
 
 ## How a step is counted
 
@@ -49,3 +53,12 @@ Mode a takes about an hour on a 2-CPU machine (83 steps, each with a type-check 
   media call site the patch has to guard. Type-check and tests passed on the mechanical result in all three cases,
   so neither git nor the checks catch it.
 - "silent_break": clean merge whose mechanical result fails the type-check or the tests.
+
+## Missing foundations met in the walk back
+
+- 1c20a107 (#8142, 24 Nov): runtimeLoad.ts / runtimeAttributes.ts. Before it each load and preload call is guarded.
+- 5ae70826 (#8480, 22 Nov): sourceLength.ts. Before it the patch brings its own.
+- 01331014 (#8138, 18 Nov): the 8 s cut-off. Before it the hold-progress part and its two tests have nothing to feed.
+- b7157bda (#7379, 8 Nov): pausedVideoFrames.ts and pausedVideoCallbacks.ts. Before it the pixel-readers part has no readers
+  to hand its picture to; it leaves the patch there and comes back at that step of the forward replay.
+- 443ded42 (#6859, 30 Oct): mediaNotReadyAt and the Buffering hold. Walk back stops here.

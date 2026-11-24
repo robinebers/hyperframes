@@ -1,0 +1,4 @@
+mode	steps	conflict_steps	hunks	lines_resolution(+/-)	clean_steps_needing_a_change	silent_breaks	test_upkeep(+/-)	failed_checks	conflicted_files(hunks)
+a	86	17	36	+71/-32	5	0	+31/-5	0	init.ts:13 preloadMedia.ts:7 mediaProxy.ts:5 media.ts:4 frameSources.ts:3 window.d.ts:1 bridge.ts:1 types.ts:1 sourceLength.ts:1
+b	5	5	33	+67/-28	0	0	+31/-5	0	init.ts:11 preloadMedia.ts:6 mediaProxy.ts:5 media.ts:4 frameSources.ts:3 window.d.ts:1 bridge.ts:1 sourceLength.ts:1 types.ts:1
+c	6	6	33	+67/-28	0	0	+31/-5	0	init.ts:11 preloadMedia.ts:6 mediaProxy.ts:5 media.ts:4 frameSources.ts:3 window.d.ts:1 bridge.ts:1 types.ts:1 sourceLength.ts:1

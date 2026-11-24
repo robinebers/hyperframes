@@ -1,0 +1,94 @@
+mode	step	upstream	date	tag	title	result	files	hunks	lines	test_lines	clean_but_differs	typecheck	tests	silent_break
+a	1	5e4f5aef	2026-10-30T18:21:27-07:00	-	fix(core): motion blur preview no longer slows down later in the timeline (#6865)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 304 passed (304))	no
+a	2	0c16afd9	2026-10-31T16:12:24Z	-	fix(core): Safari stops chopping audio by seeking it over and over during playback (#6854)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 304 passed (304))	no
+a	3	1e5413f3	2026-10-31T16:48:36Z	-	fix(core): a stuck seek in check or snapshot fails named before the protocol timeout (#659	conflict	frameSources.ts:1	1	+4/-4	+0/-0	-	pass	pass (Tests 304 passed (304))	-
+a	4	bba3676a	2026-10-31T23:29:33Z	-	feat(core): the playback health reading says which clock the film followed (#6906)	clean	-	0	+0/-0	+0/-0	+1/-0 test +0/-0	pass	pass (Tests 304 passed (304)); mechanical: typecheck=pass tests=pass (Tests 304 passed (304))	no
+a	5	e181d34e	2026-11-01T03:53:30Z	-	feat(core): WebKit plays bare audio from a decoded buffer on the audio clock (#6912)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 304 passed (304))	no
+a	6	af0d68d6	2026-11-01T12:00:26Z	-	fix(core): a resized preview video keeps its picture while its new copy loads (#6922)	conflict	mediaProxy.ts:1	1	+1/-1	+0/-0	-	pass	pass (Tests 304 passed (304))	-
+a	7	6b3e7a7a	2026-11-01T14:50:41Z	-	fix(cli): check and snapshot free video clips the playhead left, halving memory on cut fil	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 305 passed (305))	no
+a	8	89a59531	2026-11-01T16:55:53Z	-	fix(core): music keeps playing while a preview video swaps to a new copy (#6937)	conflict	init.ts:1	1	+1/-2	+0/-0	-	pass	pass (Tests 307 passed (307))	-
+a	9	9284e69f	2026-11-01T20:46:08Z	-	fix(core): accept 65-point .cube LUTs, the size grading apps export (#6921)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 307 passed (307))	no
+a	10	8519f283	2026-11-02T04:14:40Z	-	fix(core): a preview video short of data holds the film instead of looping snippets (#6974	conflict	init.ts:1 media.ts:1	2	+2/-2	+0/-0	-	pass	pass (Tests 313 passed (313))	-
+a	11	6bbda219	2026-11-02T04:41:07Z	-	fix(core): a smaller preview copy nobody wants any more no longer swaps in (#6973)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 313 passed (313))	no
+a	12	e5b10f8b	2026-11-02T07:15:45Z	-	feat(core): a heavy clip's lighter copy can be made ahead of time (#6982)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 313 passed (313))	no
+a	13	26d6e3ee	2026-11-02T07:50:16Z	-	fix(engine): a scene that has ended gives up its WebGL context so the next scene is not sl	conflict	init.ts:1 window.d.ts:1	2	+4/-0	+1/-5	-	pass	pass (Tests 313 passed (313))	-
+a	14	aaa5b63f	2026-11-02T09:24:45Z	-	fix(core): keep media prefetch queue ordered (#6996)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 313 passed (313))	no
+a	15	036e41fa	2026-11-02T13:15:47Z	-	fix(core): iPhone Safari keeps one connection per file for the take on screen and the next	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 313 passed (313))	no
+a	16	c25e0921	2026-11-02T16:46:47Z	-	fix(core): Safari audio is ready at the cut, and a stuck one resyncs in 1 s (#7024)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 315 passed (315))	no
+a	17	e8ffaa41	2026-11-02T17:47:44Z	-	fix(core): preview recovers its WebGL scenes and effects after a lost context (#7028)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 315 passed (315))	no
+a	18	eb356296	2026-11-03T00:23:50Z	-	feat(preview): an unplayable video shows its own frame while its copy is made (#6589)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 315 passed (315))	no
+a	19	47dddedd	2026-11-03T11:17:40Z	-	fix(core): Safari audio frozen after its cut is pulled onto the playhead at 0.5 s behind, 	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 318 passed (318))	no
+a	20	3d78ac0f	2026-11-04T19:11:32Z	-	fix(core): a logo image no longer renders stretched to the frame bottom (#7179)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 318 passed (318))	no
+a	21	e2a65358	2026-11-05T01:52:51Z	-	fix(core): a paused preview lets go of the scenes it has unmounted (#7195)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 318 passed (318))	no
+a	22	071ec1fd	2026-11-05T02:15:44Z	-	fix(runtime): fail readiness waits when a buildReady promise rejects (#5746)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 318 passed (318))	no
+a	23	b96d3c8b	2026-11-05T09:39:37Z	-	fix(core): a multi-worker render replays overlapping tweens behind the timeline stand-in (	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 318 passed (318))	no
+a	24	b7a8cfa7	2026-11-05T11:05:51Z	-	fix(core): keep long WebKit sources and unloaded clips on the audio clock (#7225)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 318 passed (318))	no
+a	25	5377b756	2026-11-05T16:21:24Z	-	fix(core): snapshot and preview show a clip on the frame render shows it (#7238)	conflict	frameSources.ts:2	2	+5/-4	+0/-0	-	pass	pass (Tests 317 passed (317))	-
+a	26	600bfa45	2026-11-05T16:53:59Z	-	fix(core): decode WebKit sources by memory budget, not by length (#7232)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 317 passed (317))	no
+a	27	256b84a4	2026-11-05T20:44:35Z	-	fix(core): check's no-draw seeks no longer upload graded images to the GPU (#7264)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 317 passed (317))	no
+a	28	cd7e93ba	2026-11-06T04:15:22Z	-	fix(core): blur quiets discrete callbacks instead of undoing what they wrote (#7271)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 317 passed (317))	no
+a	29	3e86def5	2026-11-06T08:51:57Z	-	fix(core): video starts a second early and catches up hidden, so the picture meets the cut	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 319 passed (319))	no
+a	30	1ddd4255	2026-11-07T02:46:21Z	-	fix(core): words in a scene the preview mounts later keep their spaces (#7342)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 319 passed (319))	no
+a	31	9058fd1a	2026-11-07T09:16:39Z	-	fix(core): skip a video the browser can't decode instead of freezing the film (#7355)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	32	59c2065d	2026-11-07T18:06:55Z	-	fix(producer): page timers during a render run on film time (#7362)	conflict	init.ts:1 media.ts:1 mediaProxy.ts:1	3	+3/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	-
+a	33	a595755a	2026-11-07T18:16:25Z	-	fix(core): a film moves on past a video the browser never starts loading (#7368)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 324 passed (324))	no
+a	34	841e90ff	2026-11-07T22:09:06Z	-	fix(core): Safari video picture lands on the cut again, undoing the hidden pre-roll (#7383	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	35	942893eb	2026-11-07T22:50:52Z	-	fix(core): preview playback moves every frame between an audio track's time updates (#7373	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	36	b87a01f6	2026-11-07T23:29:21Z	-	fix(core): retain complete preview pictures during native seeks (#7378)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	37	b7157bda	2026-11-08T00:17:12Z	-	feat(studio): scrub full-quality video with decoded preview frames (#7379)	clean	-	0	+0/-0	+0/-0	+24/-3 test +6/-1	pass	pass (Tests 322 passed (322)); mechanical: typecheck=pass tests=pass (Tests 322 passed (322))	no
+a	38	fd05a386	2026-11-08T02:26:53Z	-	feat(core): preview health names the media element that held play (#7159)	clean	-	0	+0/-0	+0/-0	-	pass	fail (Tests 1 failed | 321 passed (322))	yes
+a	39	3151fd21	2026-11-08T02:29:57Z	-	fix(studio): bound recovery and verify full-quality playback (#7393)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	40	75fe18c6	2026-11-08T06:03:31Z	-	fix(core): a set written before its tween no longer erases the tween's end (#7397)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	41	12906e0b	2026-11-08T12:18:11Z	-	fix(core): capture pages load only the clips on screen (#7402)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 322 passed (322))	no
+a	42	fa2e6351	2026-11-08T18:48:55Z	-	fix(core): a muted video's picture no longer waits on its own audio track at a cut (#7412)	conflict	media.ts:1	1	+1/-1	+0/-0	-	pass	pass (Tests 326 passed (326))	-
+a	43	a73572c3	2026-11-09T10:46:44Z	-	fix(core): a video held on its tail is seeked once, not every frame (#7442)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 329 passed (329))	no
+a	44	fecde999	2026-11-10T12:38:47Z	-	perf(core): Safari stops a long video's clips from loading the whole file at once (#7436)	conflict	preloadMedia.ts:2	2	+3/-2	+0/-0	-	pass	pass (Tests 342 passed (342))	-
+a	45	cda84222	2026-11-10T15:18:22Z	-	fix(core): Safari keeps a small file's preload and leaves a playing clip's source alone (#	conflict	preloadMedia.ts:1	1	+2/-2	+0/-0	-	pass	pass (Tests 346 passed (346))	-
+a	46	ef5cdeb0	2026-11-11T16:54:46Z	-	feat(core): give the preview parent a typed editing port to prepare for an opaque frame (#	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 346 passed (346))	no
+a	47	6cc734fd	2026-11-11T23:01:58Z	-	feat(core): motion blur preview draws fewer filter copies at lower preview quality (#7547)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 346 passed (346))	no
+a	48	303a4c47	2026-11-12T05:44:27Z	-	fix(core): show a paused video frame with the same color as the playing video on Mac (#758	conflict	pausedVideoFrames.ts:1	1	+1/-0	+0/-0	-	pass	pass (Tests 346 passed (346))	-
+a	49	ccdcf671	2026-11-13T18:56:47Z	-	perf(core): open the preview's audio context when a clip with sound plays (#7658)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 346 passed (346))	no
+a	50	b8f630c6	2026-11-13T19:18:24Z	-	fix(core): a looping preview keeps playing when a scene reloads during a hold for data (#7	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 347 passed (347))	no
+a	51	f7b49f12	2026-11-14T01:54:54Z	-	fix(core): free a preview clip's decoder when the playhead leaves it (#7679)	conflict	init.ts:1	1	+1/-1	+0/-0	-	pass	pass (Tests 347 passed (347))	-
+a	52	92816ed5	2026-11-14T02:04:23Z	-	perf(core): a reloaded preview video resyncs only itself (#7684)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 347 passed (347))	no
+a	53	2f0ade18	2026-11-14T08:09:33Z	-	fix(core): at full quality a 4K clip plays a copy at the size the preview shows it (#7723)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 347 passed (347))	no
+a	54	ded5e3ee	2026-11-15T08:22:52Z	-	perf: CSS url, @import, @font-face, style and comment scans run in linear time (#7809)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 347 passed (347))	no
+a	55	97d8f26e	2026-11-16T01:30:38Z	-	fix(core): the runtime bridge checks every control payload before use (#7892)	conflict	bridge.ts:1	1	+7/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	-
+a	56	889143ea	2026-11-16T07:06:33Z	-	fix(core): a color-graded video's dissolve and wipe play in preview and export (#7756)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	no
+a	57	9e504877	2026-11-16T16:10:40Z	-	fix(core): a capture page loads a clip with no set length only when it is due (#7938)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	no
+a	58	42508c1e	2026-11-16T18:15:46Z	-	fix(player): stop the preview freezing when many clips share one long recording (#7795)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	no
+a	59	33e1a36a	2026-11-16T21:54:40Z	-	revert(player): an app embedding the preview re-reads it after a script edit again (#7795)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	no
+a	60	c4d607c7	2026-11-16T22:53:30Z	-	fix(core): a page marked for another site gives that site only playback (#7980)	clean	-	0	+0/-0	+0/-0	+1/-0 test +0/-0	pass	pass (Tests 364 passed (364)); mechanical: typecheck=pass tests=pass (Tests 364 passed (364))	no
+a	61	43e5b7ce	2026-11-17T12:09:33Z	-	fix(core): a held video picture is drawn through a VideoFrame closed after the draw (#7971	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	no
+a	62	9797faea	2026-11-17T16:13:03Z	-	fix(core): drop motion-blur state on __hfRuntimeTeardown (#7996)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 364 passed (364))	no
+a	63	a56fa2ca	2026-11-17T16:25:29Z	-	fix(studio): scrubbing the playhead plays the music track in a sealed preview (#8082)	conflict	types.ts:1	1	+2/-2	+0/-0	-	pass	pass (Tests 368 passed (368))	-
+a	64	f1f8ca31	2026-11-17T17:26:46Z	-	fix(core): hover and thumbnail captures never wait for a 4K clip's preview copy (#8079)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 368 passed (368))	no
+a	65	01331014	2026-11-18T06:15:41Z	-	fix(core): a clip that stops downloading no longer holds the preview in Buffering forever 	conflict	init.ts:1	1	+3/-3	+55/-0	-	pass	pass (Tests 375 passed (375))	-
+a	66	e9eac3f9	2026-11-18T20:17:21Z	-	fix(core): a video with no size of its own keeps its file's size in the preview (#8211)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 375 passed (375))	no
+a	67	1929f299	2026-11-18T22:17:54Z	-	fix(studio): a sealed preview keeps Studio's size, move and turn edits after a seek (#8212	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 375 passed (375))	no
+a	68	1cf98cf8	2026-11-19T03:51:53Z	-	fix(studio): a sealed preview's timeline shows its text clips' words and look (#8228)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 375 passed (375))	no
+a	69	d106f9c8	2026-11-19T12:27:21Z	-	fix: stop crashing on SVG elements named template (#8241)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 375 passed (375))	no
+a	70	ce0932e0	2026-11-20T05:57:26Z	-	fix(studio): a video with no size of its own keeps its file's size while a lighter copy pl	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 375 passed (375))	no
+a	71	33272097	2026-11-20T07:35:20Z	-	fix(core): a sub-composition's script re-run keeps the preview at its playhead (#8276)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 375 passed (375))	no
+a	72	925a64db	2026-11-20T19:48:28Z	-	fix(player): stop films cut from one long recording freezing in apps that embed the player	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 376 passed (376))	no
+a	73	6515a908	2026-11-21T02:15:21Z	-	fix(core): seeking a film with many videos no longer hangs Safari (#8278)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 376 passed (376))	no
+a	74	120689e3	2026-11-21T16:02:26Z	-	fix(player): stop the preview reloading itself after a quick seek, and stalling at cuts on	clean	-	0	+0/-0	+0/-0	+3/-3 test +0/-0	pass	pass (Tests 385 passed (385)); mechanical: typecheck=pass tests=pass (Tests 385 passed (385))	no
+a	75	d37563e3	2026-11-22T07:49:20Z	-	fix(studio): hiding an element hides it in the preview, sealed or not (#8461)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	no
+a	76	61008a40	2026-11-22T10:15:02Z	-	fix(studio): a sealed preview shows paused video frames from Studio's decoder (#8466)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	no
+a	77	835e660e	2026-11-22T10:16:07Z	-	fix(player): a sealed film no longer shows failed to load while its runtime starts (#8472)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	no
+a	78	5ae70826	2026-11-22T10:29:19Z	-	fix(core): a far clip the runtime lets go of keeps counting in the film's length (#8480)	conflict	init.ts:1 sourceLength.ts:1	2	+16/-1	+0/-0	-	pass	pass (Tests 385 passed (385))	-
+a	79	104eab37	2026-11-22T10:55:49Z	-	fix(core): a preview seek waits for each graded video to draw its new frame (#8488)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	no
+a	80	97b90d8f	2026-11-22T12:40:37Z	-	fix(studio): a sealed preview's clips keep their GSAP transition label (#8499)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	no
+a	81	d4e8d6f9	2026-11-22T13:18:31Z	-	fix(core): a preview of hundreds of clips with no set length no longer loads them all (#83	clean	-	0	+0/-0	+0/-0	+1/-0 test +0/-0	pass	pass (Tests 385 passed (385)); mechanical: typecheck=pass tests=pass (Tests 385 passed (385))	no
+a	82	4a47c33e	2026-11-22T14:58:03Z	-	fix(core): a far clip whose source is swapped learns its new length (#8509)	conflict	init.ts:1	1	+1/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	-
+a	83	ec9a3a8e	2026-11-22T16:17:17Z	-	fix(core): a sealed move inside a nested composition shows where it was dropped (#8517)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 385 passed (385))	no
+a	84	c19d98d9	2026-11-22T16:40:09Z	-	fix(player): a late timeline from the old film no longer keeps a switched player ready (#8	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	85	87fddbc1	2026-11-22T17:32:43Z	-	fix(player): a sealed film is heard when its frame may not start sound (#8495)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	86	35a0d81c	2026-11-23T00:13:49Z	-	fix(studio): a sealed preview that can't swap scenes reloads without asking first (#8544)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	87	8c31cb3f	2026-11-23T08:26:19Z	-	fix(core): a graded video that can no longer be sampled shows plainly instead of freezing 	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	88	19f98a3e	2026-11-23T19:57:39Z	-	fix(core): a film without a declared size reports its measured size to a sealed Studio (#8	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	89	32afb984	2026-11-23T20:31:30Z	-	fix(core): looped audio plays in sync with the picture in Safari (#8612)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	90	e2fe0e6f	2026-11-24T01:58:38Z	-	fix(core): the 4K clip on screen plays its own file while its preview copy is made (#8602)	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	91	66eeb13a	2026-11-24T04:18:05Z	-	fix(core): a held clip shows its own frame, not black, while its lighter copy is made (#86	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	92	c5e3ac89	2026-11-24T06:55:36Z	-	fix(core): a one-shot Studio capture shows a 4K clip as the server's frame instead of deco	clean	-	0	+0/-0	+0/-0	-	pass	pass (Tests 387 passed (387))	no
+a	93	1c20a107	2026-11-24T09:22:41Z	-	fix(player): a sealed player plays media from hosts without CORS and names a missing runti	conflict	init.ts:5 media.ts:1 mediaProxy.ts:3 preloadMedia.ts:4	13	+7/-2	+0/-0	-	pass	pass (Tests 397 passed (397))	-

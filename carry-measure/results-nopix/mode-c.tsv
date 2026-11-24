@@ -1,0 +1,7 @@
+mode	step	upstream	date	tag	title	result	files	hunks	lines	test_lines	clean_but_differs	typecheck	tests	silent_break
+c	1	398ef5062	2026-11-02T20:19:33Z	v0.9.6	chore: release v0.9.6 (#7037)	conflict	frameSources.ts:1 init.ts:2 media.ts:1 mediaProxy.ts:1 window.d.ts:1	6	+12/-7	+1/-5	-	pass	pass (Tests 315 passed (315))	-
+c	2	9e346f9bb	2026-11-09T22:55:56Z	v0.9.27	chore(release): cut v0.9.27 (#7464)	conflict	frameSources.ts:2 init.ts:1 media.ts:2 mediaProxy.ts:1	6	+11/-7	+0/-0	-	pass	pass (Tests 329 passed (329))	-
+c	3	725d13bb1	2026-11-16T15:15:30Z	v0.9.58	chore: release v0.9.58 (#7932)	conflict	bridge.ts:1 init.ts:1 preloadMedia.ts:2	4	+11/-3	+0/-0	-	pass	pass (Tests 364 passed (364))	-
+c	4	c3d25a41f	2026-11-21T22:05:41Z	v0.9.79	chore: release v0.9.79 (#8402)	conflict	init.ts:1 types.ts:1	2	+9/-8	+30/-0	-	pass	pass (Tests 384 passed (384))	-
+c	5	574b5e3d3	2026-11-23T14:53:04Z	v0.9.86	chore: release v0.9.86 (#8595)	conflict	init.ts:1 sourceLength.ts:1	2	+17/-1	+0/-0	-	pass	pass (Tests 386 passed (386))	-
+c	6	efef86580	2026-11-24T11:06:30Z	-	fix(skills): bake-basemap asks npm where global packages live, and says where it looked (#	conflict	init.ts:5 media.ts:1 mediaProxy.ts:3 preloadMedia.ts:4	13	+7/-2	+0/-0	-	pass	pass (Tests 396 passed (396))	-

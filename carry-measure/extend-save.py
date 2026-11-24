@@ -14,6 +14,8 @@ with tempfile.TemporaryDirectory() as d:
     env = dict(os.environ, GIT_INDEX_FILE=os.path.join(d, "i"))
     git("read-tree", tree, env=env)
     for f in files:
+        if f.startswith("DELETE "):
+            git("update-index", "--force-remove", f[7:], env=env); continue
         text = open(os.path.join(cd, os.path.basename(f)), "rb").read()
         assert b"<<<<<<<" not in text and b">>>>>>>" not in text, f"markers left in {f}"
         blob = git("hash-object", "-w", "--stdin", input=text)

@@ -1,0 +1,614 @@
+diff --git a/packages/core/src/compositionReadiness.test.ts b/packages/core/src/compositionReadiness.test.ts
+index 6fcae14f..3ef68d7c 100644
+--- a/packages/core/src/compositionReadiness.test.ts
++++ b/packages/core/src/compositionReadiness.test.ts
+@@ -7,6 +7,7 @@ import {
+   settleCompositionReadiness,
+   settleFirstFrameCompositionReadiness,
+ } from "./compositionReadiness.js";
++import { registerFrameSource } from "./runtime/frameSources.js";
+ import { createRuntimeStartTimeResolver } from "./runtime/startResolver.js";
+ import { STUDIO_PREVIEW_MARK_META } from "./studioPreviewMark.js";
+ import { isRuntimeElementVisibleAt } from "./runtime/timeline.js";
+@@ -87,6 +88,14 @@ describe("scanPendingCompositionAssets", () => {
+     expect(scan.pendingMedia.map((media) => media.id)).toEqual(["untimed"]);
+   });
+ 
++  it("leaves out media a frame source supplies", () => {
++    const doc = docWith('<video id="cam" data-start="0" data-duration="5"></video>');
++    const dispose = registerFrameSource({ element: doc.getElementById("cam")!, render: () => {} });
++
++    expect(scanPendingCompositionAssets(doc, { scope: "first-frame" }).pendingMedia).toEqual([]);
++    dispose();
++  });
++
+   it("keeps nested timing decisions aligned with the runtime visibility owner", () => {
+     const doc = docWith(
+       '<section data-start="30" data-duration="5"><video id="nested" src="later.mp4"></video></section>',
+diff --git a/packages/core/src/compositionReadiness.ts b/packages/core/src/compositionReadiness.ts
+index e4f34ebe..33e107a4 100644
+--- a/packages/core/src/compositionReadiness.ts
++++ b/packages/core/src/compositionReadiness.ts
+@@ -1,3 +1,4 @@
++import { hasFrameSource } from "./runtime/frameSources.js";
+ import { createRuntimeStartTimeResolver } from "./runtime/startResolver.js";
+ import { isRuntimeElementVisibleAt } from "./runtime/timeline.js";
+ import type { RuntimeTimelineLike } from "./runtime/types.js";
+@@ -115,7 +116,7 @@ export function scanPendingCompositionAssets(
+         runtimeWindow?.__timelines ?? {},
+       ),
+     )
+-    .filter((el) => el.readyState < HAVE_FUTURE_DATA);
++    .filter((el) => el.readyState < HAVE_FUTURE_DATA && !hasFrameSource(el));
+   // A lazy image off the first frame loads only once shown, so no scope can wait on it.
+   const pendingImages = Array.from(doc.querySelectorAll("img"))
+     .filter((img) =>
+diff --git a/packages/core/src/runtime/clipTree.ts b/packages/core/src/runtime/clipTree.ts
+index 47ad3575..bdb64234 100644
+--- a/packages/core/src/runtime/clipTree.ts
++++ b/packages/core/src/runtime/clipTree.ts
+@@ -10,6 +10,7 @@
+  * absolute start) when a caller needs them.
+  */
+ 
++import { sourceLengthOf } from "./sourceLength";
+ import type { RuntimeTimelineLike } from "./types";
+ import {
+   parseStrictFiniteTimingNumber,
+@@ -74,8 +75,8 @@ function durationFromTimeline(
+ 
+ function durationFromMedia(el: Element): number | null {
+   if (isMediaElement(el)) {
+-    return Number.isFinite(el.duration)
+-      ? resolveNaturalMediaTimelineDuration(el, el.duration)
++    return Number.isFinite(sourceLengthOf(el))
++      ? resolveNaturalMediaTimelineDuration(el, sourceLengthOf(el))
+       : null;
+   }
+   return resolveTimedImageDurationSeconds(el);
+diff --git a/packages/core/src/runtime/frameSources.ts b/packages/core/src/runtime/frameSources.ts
+index 3607b459..ec59f334 100644
+--- a/packages/core/src/runtime/frameSources.ts
++++ b/packages/core/src/runtime/frameSources.ts
+@@ -2,6 +2,7 @@ import { sourceTimeAt } from "../speedRamp";
+ import { readElementRateSpec, readMediaStart } from "./playbackRate";
+ import { registerSeekCompletion } from "./adapters/seek-dispatch";
+ import { isClipOnScreenAt } from "./clipWindow";
++import { sourceLengthOf, supplySourceLength } from "./sourceLength";
+ import type { RuntimeDeterministicAdapter } from "./types";
+ 
+ export interface FrameSource {
+@@ -9,12 +10,20 @@ export interface FrameSource {
+   ready?: PromiseLike<unknown>;
+   sourceRange?: { start: number; duration: number; fps: number };
+   render: (sourceTime: number, signal: AbortSignal) => void | PromiseLike<unknown>;
++  /** Whether playback can go on from this source time; while false the film holds with Buffering. */
++  canPlayAt?: (sourceTime: number) => boolean;
++  /** The source's length in seconds once known; announce it with a `durationchange` event on the element. */
++  length?: () => number | undefined;
++  /** Grows while the source still receives data; a hold ends 8 s after it last grew, as for a native clip. */
++  received?: () => number;
+   dispose?: () => void;
+ }
+ 
+ interface RegisteredSource {
+   element: Element;
+   ready: Promise<unknown>;
++  canPlayAt?: (sourceTime: number) => boolean;
++  received?: () => number;
+   seek: (time: number) => Promise<void>;
+   dispose: () => void;
+ }
+@@ -23,6 +32,33 @@ const sources = new Map<Element, RegisteredSource>();
+ 
+ export const hasFrameSources = (): boolean => sources.size > 0;
+ 
++/** A media element with a frame source is the source's to supply: the runtime never loads, seeks or plays it. */
++export const hasFrameSource = (element: object): boolean => sources.has(element as Element);
++
++/** What the element's frame source has received so far; undefined without one that says. */
++export const frameSourceReceived = (element: Element): number | undefined =>
++  sources.get(element)?.received?.();
++
++/** The source time an element shows at film time `time`, for an element that starts at `start`; `loop` wraps it. */
++export function frameSourceTimeAt(element: Element, time: number, start: number): number {
++  const mediaStart = readMediaStart(element);
++  const target = mediaStart + sourceTimeAt(readElementRateSpec(element), Math.max(0, time - start));
++  const length = sourceLengthOf(element as HTMLMediaElement);
++  return (element as HTMLMediaElement).loop && length > mediaStart && target >= length
++    ? mediaStart + ((target - mediaStart) % (length - mediaStart))
++    : target;
++}
++
++/** Whether the element's frame source cannot play on from film time `time`; undefined without one that says. */
++export function frameSourceWaitsAt(
++  element: Element,
++  time: number,
++  start: number,
++): boolean | undefined {
++  const canPlayAt = sources.get(element)?.canPlayAt;
++  return canPlayAt && !canPlayAt(frameSourceTimeAt(element, time, start));
++}
++
+ /** Bind a frame source to a timed host. Unregister before replacing its source. */
+ export function registerFrameSource(source: FrameSource): () => void {
+   if (sources.has(source.element)) throw new Error("This element already has a frame source");
+@@ -68,6 +104,8 @@ export function registerFrameSource(source: FrameSource): () => void {
+   const registered: RegisteredSource = {
+     element: source.element,
+     ready,
++    canPlayAt: source.canPlayAt,
++    received: source.received,
+     seek(time) {
+       pending = range
+         ? range.start + Math.min(Math.max(0, time), Math.max(0, range.duration - 1 / range.fps))
+@@ -80,10 +118,12 @@ export function registerFrameSource(source: FrameSource): () => void {
+       controller.abort();
+       pending = null;
+       sources.delete(source.element);
++      supplySourceLength(source.element, undefined);
+       source.dispose?.();
+     },
+   };
+   sources.set(source.element, registered);
++  supplySourceLength(source.element, source.length);
+   return registered.dispose;
+ }
+ 
+@@ -138,10 +178,10 @@ export function createFrameSourceAdapter(timing: {
+           timing.compositionDuration(),
+         );
+         if (!onScreen) continue;
+-        const localTime = Math.max(0, time - start);
+-        const sourceTime =
+-          readMediaStart(element) + sourceTimeAt(readElementRateSpec(element), localTime);
+-        registerSeekCompletion(source.seek(sourceTime), "frame-source");
++        registerSeekCompletion(
++          source.seek(frameSourceTimeAt(element, time, start)),
++          "frame-source",
++        );
+       }
+     },
+     getReadyPromise: () => {
+diff --git a/packages/core/src/runtime/init.frameSourceMedia.test.ts b/packages/core/src/runtime/init.frameSourceMedia.test.ts
+new file mode 100644
+index 00000000..8af9a40e
+--- /dev/null
++++ b/packages/core/src/runtime/init.frameSourceMedia.test.ts
+@@ -0,0 +1,145 @@
++import { afterEach, expect, it, vi } from "vitest";
++import { registerFrameSource } from "./frameSources";
++import { initSandboxRuntimeModular } from "./init";
++import { createMockTimeline, resetRuntimeFixtureDom } from "./runtimeSeekFixture.test-helpers";
++
++const disposers: Array<() => void> = [];
++
++/**
++ * A ten-second film whose video #cam has a frame source and no src of its own, played on a hand-driven clock. The
++ * source can play while `canPlay.value` is true; `videoAttrs` replaces the video's timing attributes.
++ */
++function playWithFrameSource({
++  videoAttrs = 'data-start="0" data-duration="4"',
++  length,
++  received,
++}: {
++  videoAttrs?: string;
++  length?: () => number | undefined;
++  received?: () => number;
++} = {}) {
++  resetRuntimeFixtureDom();
++  document.body.innerHTML =
++    '<div data-composition-id="main" data-root="true" data-duration="10">' +
++    `<video id="cam" data-track-index="0" ${videoAttrs}></video>` +
++    "</div>";
++  const cam = document.getElementById("cam") as HTMLVideoElement;
++  vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
++  vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
++  const canPlay = { value: false };
++  const asked: number[] = [];
++  disposers.push(
++    registerFrameSource({
++      element: cam,
++      render: (sourceTime) => void asked.push(sourceTime),
++      canPlayAt: () => canPlay.value,
++      length,
++      received,
++    }),
++  );
++  window.__timelines = { main: createMockTimeline(10) };
++
++  let now = 0;
++  const frames = new Map<number, FrameRequestCallback>();
++  let nextFrame = 0;
++  vi.spyOn(performance, "now").mockImplementation(() => now);
++  window.requestAnimationFrame = (cb) => (frames.set(++nextFrame, cb), nextFrame);
++  window.cancelAnimationFrame = (id) => void frames.delete(id);
++  const states: Array<{ isPlaying: boolean; buffering: boolean }> = [];
++  vi.spyOn(window.parent, "postMessage").mockImplementation((message: unknown) => {
++    const m = message as { type?: string; isPlaying: boolean; buffering: boolean };
++    if (m?.type === "state") states.push({ isPlaying: m.isPlaying, buffering: m.buffering });
++  });
++
++  initSandboxRuntimeModular();
++  const playFor = (seconds: number) => {
++    for (let ms = 0; ms < seconds * 1000; ms += 1000 / 60) {
++      now += 1000 / 60;
++      const due = [...frames.values()];
++      frames.clear();
++      for (const cb of due) cb(now);
++    }
++  };
++  return { cam, canPlay, asked, states, playFor };
++}
++
++afterEach(() => {
++  for (const dispose of disposers.splice(0)) dispose();
++  window.__hfRuntimeTeardown?.();
++  vi.restoreAllMocks();
++  resetRuntimeFixtureDom();
++});
++
++it("a video whose frame source cannot play yet holds the film with Buffering, and resumes once it can", () => {
++  const { canPlay, states, playFor } = playWithFrameSource();
++  window.__player!.play();
++
++  playFor(1);
++  expect(window.__player!.getTime()).toBeLessThan(0.1);
++  expect(states.at(-1)).toEqual({ isPlaying: true, buffering: true });
++
++  canPlay.value = true;
++  playFor(1);
++  expect(window.__player!.getTime()).toBeGreaterThan(0.9);
++  expect(states.at(-1)).toEqual({ isPlaying: true, buffering: false });
++});
++
++it("the runtime never loads, seeks or plays a video its frame source supplies, even one with a src", () => {
++  const { cam, canPlay, playFor } = playWithFrameSource({
++    videoAttrs: 'data-start="0" data-duration="4" src="/cam.mp4"',
++  });
++  const load = vi.spyOn(cam, "load").mockImplementation(() => {});
++  const play = vi.spyOn(cam, "play").mockImplementation(() => Promise.resolve());
++  const seek = vi.fn();
++  Object.defineProperty(cam, "currentTime", { get: () => 0, set: seek, configurable: true });
++  canPlay.value = true;
++
++  window.__player!.play();
++  playFor(1);
++  window.__player!.seek(2);
++  window.__player!.pause();
++  window.__player!.play();
++  playFor(1);
++
++  expect(load).not.toHaveBeenCalled();
++  expect(play).not.toHaveBeenCalled();
++  expect(seek).not.toHaveBeenCalled();
++});
++
++it("a frame source gives the source time it is asked for, trims and speed included, to the page", async () => {
++  const { cam, canPlay, asked, playFor } = playWithFrameSource({
++    videoAttrs: 'data-start="2" data-duration="4" data-media-start="5" data-playback-rate="2"',
++  });
++  canPlay.value = true;
++  window.__player!.seek(3);
++  playFor(0.1);
++
++  expect(window.__hf!.sourceTimeAt!(cam, 3)).toBeCloseTo(7);
++  await vi.waitFor(() => expect(asked.at(-1)).toBeCloseTo(7));
++});
++
++it("a looping video's frame source is asked for source times that wrap at its length", () => {
++  const { cam, playFor } = playWithFrameSource({
++    videoAttrs: 'data-start="0" data-duration="8" data-media-start="1" loop',
++    length: () => 4,
++  });
++  playFor(0.1);
++
++  expect(window.__hf!.sourceTimeAt!(cam, 2)).toBeCloseTo(3);
++  expect(window.__hf!.sourceTimeAt!(cam, 4)).toBeCloseTo(2);
++});
++
++it("a video the page gives no length lasts as long as its frame source says its source is", () => {
++  let length: number | undefined;
++  const { cam, playFor } = playWithFrameSource({
++    videoAttrs: 'data-start="1" data-media-start="2"',
++    length: () => length,
++  });
++  playFor(0.1);
++
++  length = 6;
++  cam.dispatchEvent(new Event("durationchange"));
++  playFor(0.1);
++
++  expect(window.__hf!.clipWindow!(cam)).toEqual({ start: 1, end: 5 });
++});
+diff --git a/packages/core/src/runtime/init.ts b/packages/core/src/runtime/init.ts
+index 67a3e1ca..8f832bfc 100644
+--- a/packages/core/src/runtime/init.ts
++++ b/packages/core/src/runtime/init.ts
+@@ -1,4 +1,5 @@
+ // fallow-ignore-file code-duplication complexity
++import { sourceLengthOf } from "./sourceLength";
+ import { wallClearTimeout, wallSetTimeout } from "./wallClock";
+ import { setPreviewRasterScale } from "./previewRasterHints";
+ import { createFarSceneSkip } from "./farScenes";
+@@ -85,7 +86,12 @@ import { createGoogleMapsAdapter } from "./adapters/google-maps";
+ import { createMaplibreAdapter } from "./adapters/maplibre";
+ import { createD3Adapter } from "./adapters/d3";
+ import { createTypegpuAdapter } from "./adapters/typegpu";
+-import { createFrameSourceAdapter } from "./frameSources";
++import {
++  createFrameSourceAdapter,
++  frameSourceTimeAt,
++  frameSourceWaitsAt,
++  hasFrameSource,
++} from "./frameSources";
+ import {
+   patchVideoTextureCompat,
+   patchWebGLVideoTextureCompat,
+@@ -3286,7 +3292,7 @@ export function initSandboxRuntimeModular(): void {
+     mediaNearPlayhead.set(el, near);
+     if (!near) {
+       const wasPreloading = el.preload !== "none";
+-      el.preload = "none";
++      if (!hasFrameSource(el)) el.preload = "none";
+       const video = freesBufferedVideo(el);
+       const holdsPipeline = video
+         ? decided || el.readyState > 0 || el.networkState === 2
+@@ -3617,8 +3623,8 @@ export function initSandboxRuntimeModular(): void {
+           context.inheritedDuration > 0
+             ? Math.max(0, context.inheritedStart + context.inheritedDuration - start)
+             : null;
+-        const sourceDuration = Number.isFinite(element.duration)
+-          ? resolveNaturalMediaTimelineDuration(element, element.duration)
++        const sourceDuration = Number.isFinite(sourceLengthOf(element))
++          ? resolveNaturalMediaTimelineDuration(element, sourceLengthOf(element))
+           : null;
+         // The element's own data-duration is an explicit clip-length trim
+         // (the studio writes it when you drag the clip edge). It must bound
+@@ -3821,6 +3827,8 @@ export function initSandboxRuntimeModular(): void {
+       timelineRegistry: window.__timelines ?? {},
+       resolver: timingResolverFor(true),
+     });
++  window.__hf.sourceTimeAt = (element, time) =>
++    frameSourceTimeAt(element, time, resolveStartForElement(element, 0));
+   window.__hf.audioMeter = {
+     start: () => webAudio.startMetering(),
+     stop: () => webAudio.stopMetering(),
+@@ -5078,7 +5086,7 @@ export function initSandboxRuntimeModular(): void {
+       prepare: (clips, time, signal, settled) => {
+         moveSceneWindow(time);
+         for (const { el } of clips) {
+-          if (!isVideoElement(el) || el.videoWidth > 0) continue;
++          if (!isVideoElement(el) || el.videoWidth > 0 || hasFrameSource(el)) continue;
+           if (el.preload === "none") el.preload = "metadata";
+           if (el.networkState !== 2) el.load();
+         }
+@@ -5133,7 +5141,7 @@ export function initSandboxRuntimeModular(): void {
+       moveSceneWindow(time);
+       for (const clip of clips) {
+         const { el } = clip;
+-        if (el.preload !== "auto") el.preload = "auto";
++        if (el.preload !== "auto" && !hasFrameSource(el)) el.preload = "auto";
+         if (el.readyState === 1 && !el.seeking)
+           el.currentTime = mediaElementTime(mediaSourceTimeAt(clip, time));
+       }
+@@ -6186,8 +6194,7 @@ export function initSandboxRuntimeModular(): void {
+           .filter(
+             ({ el, start, end }) =>
+               isInClipWindow(t, start, end) &&
+-              !ready(el) &&
+-              isPlayableTrack(el) &&
++              (frameSourceWaitsAt(el, t, start) ?? (!ready(el) && isPlayableTrack(el))) &&
+               !stillStandsIn(el) &&
+               !pausedFrames.retained(el) &&
+               !webAudio.ownsElement(el),
+@@ -6396,7 +6403,8 @@ export function initSandboxRuntimeModular(): void {
+     // Same clips and source time as the media sync that follows, so it has nothing left to seek.
+     const clips = withTimingResolver(() => buildRuntimeMediaCache().mediaClips);
+     for (const clip of transportMovableClips(clips) ?? []) {
+-      if (!clip.el.isConnected || !isInClipWindow(timeSeconds, clip.start, clip.end)) continue;
++      if (!clip.el.isConnected || hasFrameSource(clip.el)) continue;
++      if (!isInClipWindow(timeSeconds, clip.start, clip.end)) continue;
+       const target = mediaSourceTimeAt(clip, timeSeconds);
+       // A seek flushes the decoder even when it lands where the video already is.
+       if (Math.abs(clip.el.currentTime - target) <= tolerance) continue;
+diff --git a/packages/core/src/runtime/media.ts b/packages/core/src/runtime/media.ts
+index 5bc7a7e2..2b66ecdd 100644
+--- a/packages/core/src/runtime/media.ts
++++ b/packages/core/src/runtime/media.ts
+@@ -1,3 +1,4 @@
++import { sourceLengthOf } from "./sourceLength";
+ import { wallClearTimeout, wallSetTimeout } from "./wallClock";
+ import { swallow } from "./diagnostics";
+ import { isClipVisibleAt, isInClipWindow } from "./clipWindow";
+@@ -24,6 +25,7 @@ import {
+   MEDIA_SYNC_TOLERANCE_SECONDS,
+   steerMedia,
+ } from "./mediaSteer.js";
++import { hasFrameSource } from "./frameSources";
+ export { MEDIA_HARD_SYNC_SECONDS, MEDIA_SYNC_TOLERANCE_SECONDS } from "./mediaSteer.js";
+ export type { RuntimeMediaClip } from "./types.js";
+ export {
+@@ -149,7 +151,8 @@ export function refreshRuntimeMediaCache(params?: {
+     const playbackRate = readElementPlaybackRate(el);
+     const rate = readElementRateSpec(el);
+     const loop = el.loop;
+-    const sourceDuration = Number.isFinite(el.duration) && el.duration > 0 ? el.duration : null;
++    const length = sourceLengthOf(el);
++    const sourceDuration = Number.isFinite(length) && length > 0 ? length : null;
+     let duration =
+       params?.resolveDurationSeconds?.(el) ?? Number.parseFloat(el.dataset.duration ?? "");
+     if ((!Number.isFinite(duration) || duration < 0) && sourceDuration != null) {
+@@ -545,7 +548,7 @@ export function syncRuntimeMedia(params: {
+   playheadWasRunning = params.playing && params.clockAdvancing !== false;
+   for (const clip of params.clips) {
+     const { el } = clip;
+-    if (!el.isConnected) continue;
++    if (!el.isConnected || hasFrameSource(el)) continue;
+     dropSilentAudioTrack(el);
+     const clipRate = clip.rate ?? clip.playbackRate;
+     const origin = clip.origin ?? clip.start;
+diff --git a/packages/core/src/runtime/mediaProxy.ts b/packages/core/src/runtime/mediaProxy.ts
+index 6100df42..11e2c0f7 100644
+--- a/packages/core/src/runtime/mediaProxy.ts
++++ b/packages/core/src/runtime/mediaProxy.ts
+@@ -1,4 +1,5 @@
+ import { wallClearInterval, wallSetInterval, wallSetTimeout } from "./wallClock";
++import { hasFrameSource } from "./frameSources";
+ import { postRuntimeMessage } from "./bridge";
+ import { swallow } from "./diagnostics";
+ import {
+@@ -226,7 +227,7 @@ function restoreOriginal(el: HTMLMediaElement): void {
+     holdShownFrame(el);
+     el.setAttribute("src", original);
+   }
+-  el.load();
++  if (!hasFrameSource(el)) el.load();
+ }
+ 
+ // Wide enough to stand in for the picture for the moment a swap takes; small enough to encode in a few ms.
+@@ -292,7 +293,7 @@ function loadProxy(
+   restartPlaybackHealth();
+   holdShownFrame(el);
+   el.src = href;
+-  el.load();
++  if (!hasFrameSource(el)) el.load();
+ }
+ 
+ /**
+diff --git a/packages/core/src/runtime/playbackRate.ts b/packages/core/src/runtime/playbackRate.ts
+index d31bb1f9..6e28e1c7 100644
+--- a/packages/core/src/runtime/playbackRate.ts
++++ b/packages/core/src/runtime/playbackRate.ts
+@@ -1,3 +1,4 @@
++import { sourceLengthOf } from "./sourceLength";
+ import {
+   clampPlaybackRate,
+   readAuthoredDurationSeconds,
+@@ -62,12 +63,12 @@ export function resolveMediaElementDurationSeconds(
+   const resolved = resolveMediaDuration({
+     tag: "video", // video and audio resolve identically
+     authoredDurationSeconds: readDataDurationSeconds((name) => el.getAttribute(name)),
+-    sourceDurationSeconds: Number.isFinite(el.duration) ? el.duration : null,
++    sourceDurationSeconds: Number.isFinite(sourceLengthOf(el)) ? sourceLengthOf(el) : null,
+     mediaStartSeconds: readMediaStart(el),
+     playbackRate: readElementPlaybackRate(el),
+   });
+   return resolved.source === "media"
+-    ? resolveNaturalMediaTimelineDuration(el, el.duration)
++    ? resolveNaturalMediaTimelineDuration(el, sourceLengthOf(el))
+     : resolved.seconds;
+ }
+ 
+diff --git a/packages/core/src/runtime/preloadMedia.ts b/packages/core/src/runtime/preloadMedia.ts
+index 935f0a13..404e17d1 100644
+--- a/packages/core/src/runtime/preloadMedia.ts
++++ b/packages/core/src/runtime/preloadMedia.ts
+@@ -1,4 +1,5 @@
+ import { parseStrictFiniteTimingNumber, readMediaStart } from "./playbackRate";
++import { hasFrameSource } from "./frameSources";
+ import {
+   authoredSrcOf,
+   holdsWhenIdle,
+@@ -29,7 +30,7 @@ export function isRenderFrameVideo(
+ }
+ 
+ export function preloadMedia(media: PreloadableMedia): void {
+-  if (isRenderFrameVideo(media)) return;
++  if (isRenderFrameVideo(media) || hasFrameSource(media)) return;
+   if (media.preload !== "auto") media.preload = "auto";
+   // load() resets an in-flight video fetch, discarding its selected resource and buffered data.
+   const videoAlreadyLoading = media.tagName === "VIDEO" && media.networkState === 2;
+@@ -80,7 +81,7 @@ export function stopMediaDownload(media: HTMLMediaElement): void {
+   cancelPlaybackStart(media);
+   for (const source of media.querySelectorAll("source")) source.remove();
+   media.removeAttribute("src");
+-  media.load();
++  if (!hasFrameSource(media)) media.load();
+ }
+ 
+ function wholeFileBuffered(media: HTMLMediaElement): boolean {
+@@ -219,8 +220,8 @@ export function deferMediaUntilDue(): void {
+     const media = el as HTMLMediaElement;
+     const authoredPreload = media.preload;
+     const later = startInFilm(el) > 0;
+-    if (later) media.preload = "none";
+-    const restore = () => (media.preload = authoredPreload);
++    if (later && !hasFrameSource(media)) media.preload = "none";
++    const restore = () => void (hasFrameSource(media) || (media.preload = authoredPreload));
+     openLongSourceAtInPoint(media, later, restore, later && parsedEarly ? restore : undefined);
+   };
+   win.__hfMediaDeferral = new MutationObserver((records) => {
+diff --git a/packages/core/src/runtime/sourceLength.ts b/packages/core/src/runtime/sourceLength.ts
+new file mode 100644
+index 00000000..3c6d9f7b
+--- /dev/null
++++ b/packages/core/src/runtime/sourceLength.ts
+@@ -0,0 +1,16 @@
++const supplied = new WeakMap<object, () => number | undefined>();
++
++/** A frame source's answer for the element's length; undefined removes it. */
++export function supplySourceLength(
++  media: object,
++  length: (() => number | undefined) | undefined,
++): void {
++  if (length) supplied.set(media, length);
++  else supplied.delete(media);
++}
++
++/** The source length: the element's own, else its frame source's; NaN. */
++export function sourceLengthOf(media: { duration: number }): number {
++  if (Number.isFinite(media.duration)) return media.duration;
++  return supplied.get(media)?.() ?? Number.NaN;
++}
+diff --git a/packages/core/src/runtime/startResolver.ts b/packages/core/src/runtime/startResolver.ts
+index c1ef59a2..ed769908 100644
+--- a/packages/core/src/runtime/startResolver.ts
++++ b/packages/core/src/runtime/startResolver.ts
+@@ -1,3 +1,4 @@
++import { sourceLengthOf } from "./sourceLength";
+ import type { RuntimeTimelineLike } from "./types";
+ import { readTimelineDurationSeconds } from "./timelineDuration";
+ import { resolveAuthoredTimingWindow } from "./authoredTiming";
+@@ -100,7 +101,7 @@ export function createRuntimeStartTimeResolver(params: {
+       resolveAuthoredDuration(element) ??
+       positive(
+         isMediaElement(element)
+-          ? resolveNaturalMediaTimelineDuration(element, element.duration)
++          ? resolveNaturalMediaTimelineDuration(element, sourceLengthOf(element))
+           : null,
+       ) ??
+       positive(resolveTimedImageDurationSeconds(element)) ??
+diff --git a/packages/core/src/runtime/timeline.ts b/packages/core/src/runtime/timeline.ts
+index f37af327..6a465ace 100644
+--- a/packages/core/src/runtime/timeline.ts
++++ b/packages/core/src/runtime/timeline.ts
+@@ -1,3 +1,4 @@
++import { sourceLengthOf } from "./sourceLength";
+ import type {
+   RuntimeTimelineClip,
+   RuntimeTimelineMessage,
+@@ -446,8 +447,8 @@ export function collectRuntimeTimelinePayload(params: {
+       duration = resolveTimelineDurationSeconds(nodeCompositionId);
+     }
+     if (duration == null && isMediaElement(node)) {
+-      if (Number.isFinite(node.duration)) {
+-        duration = resolveNaturalMediaTimelineDuration(node, node.duration);
++      if (Number.isFinite(sourceLengthOf(node))) {
++        duration = resolveNaturalMediaTimelineDuration(node, sourceLengthOf(node));
+       }
+     }
+     if (duration == null) duration = resolveTimedImageDurationSeconds(node, start);
+diff --git a/packages/core/src/runtime/window.d.ts b/packages/core/src/runtime/window.d.ts
+index 78bd16ed..58be9377 100644
+--- a/packages/core/src/runtime/window.d.ts
++++ b/packages/core/src/runtime/window.d.ts
+@@ -76,6 +76,8 @@ declare global {
+       /** The window a clip occupies on the composition clock, its start references resolved as the renderer does;
+        *  end is Infinity for the root. Null for an element with no timing. */
+       clipWindow?: (el: Element) => { start: number; end: number } | null;
++      /** The source time a frame source on the element is asked for at composition time `time`. */
++      sourceTimeAt?: (el: Element, time: number) => number;
+       /** Borrow an element's playback while the transport clock is paused, so the
+        *  runtime's paused-side enforcement leaves it alone. Always release. */
+       leasePausedMedia?: (el: HTMLMediaElement) => void;
