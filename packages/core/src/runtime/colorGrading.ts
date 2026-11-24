@@ -3425,7 +3425,9 @@ type DrawableFrame = {
 function drawableFrame(entry: ColorGradingEntry): DrawableFrame | null {
   if (document.documentElement.hasAttribute(PREVIEW_SEEK_HOLD_ATTR)) return null;
   const source = getDrawableSource(entry.element);
-  const pixels = source && readablePixels(source, entry);
+  const pixels =
+    source &&
+    ((entry.element as { amFrame?: VideoFrame }).amFrame ?? readablePixels(source, entry));
   if (!source || !pixels) {
     if (!entry.hasDrawn) entry.canvas.style.display = "none";
     return null;
