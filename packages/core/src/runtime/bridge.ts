@@ -22,6 +22,7 @@ type BridgeDeps = {
   onSetMediaOutputMuted: (muted: boolean) => void;
   onSetNativeMediaSyncDisabled: (disabled: boolean) => void;
   onSetWebAudioMediaDisabled: (disabled: boolean) => void;
+  onAudioClock?: (sample: { time: number; rate: number; at: number } | null) => void;
   onSetPlaybackRate: (rate: number) => void;
   onSetIdleHeartbeat: (slow: boolean) => void;
   onSetRootDuration: (durationSeconds: number) => void;
@@ -65,6 +66,7 @@ const ANOTHER_SITE_DRIVES = new Set<string>([
   "set-playback-rate",
   "set-idle-heartbeat",
   "set-display-scale",
+  "audio-clock",
 ]);
 
 let markedForAnotherSite = false;
@@ -178,6 +180,13 @@ const CONTROL_HANDLERS = new Map<string, ControlHandler>(
       deps.onSetNativeMediaSyncDisabled(data.disabled === true),
     "set-web-audio-media-disabled": (data, deps) =>
       deps.onSetWebAudioMediaDisabled(data.disabled === true),
+    "audio-clock": (data, deps) => {
+      if (data.time === null) return deps.onAudioClock?.(null);
+      const { time, rate, at } = data;
+      if (!isFiniteNumber(time) || !isFiniteNumber(rate) || !isFiniteNumber(at) || rate <= 0)
+        return;
+      deps.onAudioClock?.({ time: Math.max(0, time), rate, at });
+    },
     "set-playback-rate": (data, deps) => {
       const rate = readNumber(data.playbackRate, 1);
       if (rate !== null) deps.onSetPlaybackRate(rate);
