@@ -89,6 +89,28 @@ it("a frame source that never can play stops holding the film after 8 s, as a cl
   expect(states.at(-1)).toEqual({ isPlaying: true, buffering: false });
 });
 
+it("the runtime never loads, seeks or plays a video its frame source supplies, even one with a src", () => {
+  const { cam, canPlay, playFor } = playWithFrameSource({
+    videoAttrs: 'data-start="0" data-duration="4" src="/cam.mp4"',
+  });
+  const load = vi.spyOn(cam, "load").mockImplementation(() => {});
+  const play = vi.spyOn(cam, "play").mockImplementation(() => Promise.resolve());
+  const seek = vi.fn();
+  Object.defineProperty(cam, "currentTime", { get: () => 0, set: seek, configurable: true });
+  canPlay.value = true;
+
+  window.__player!.play();
+  playFor(1);
+  window.__player!.seek(2);
+  window.__player!.pause();
+  window.__player!.play();
+  playFor(1);
+
+  expect(load).not.toHaveBeenCalled();
+  expect(play).not.toHaveBeenCalled();
+  expect(seek).not.toHaveBeenCalled();
+});
+
 it("a frame source gives the source time it is asked for, trims and speed included, to the page", async () => {
   const { cam, canPlay, asked, playFor } = playWithFrameSource({
     videoAttrs: 'data-start="2" data-duration="4" data-media-start="5" data-playback-rate="2"',

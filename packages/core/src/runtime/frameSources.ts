@@ -26,6 +26,9 @@ const sources = new Map<Element, RegisteredSource>();
 
 export const hasFrameSources = (): boolean => sources.size > 0;
 
+/** A media element with a frame source is the source's to supply: the runtime never loads, seeks or plays it. */
+export const hasFrameSource = (element: object): boolean => sources.has(element as Element);
+
 /** The source time an element shows at film time `time`, for an element that starts at `start`. */
 export function frameSourceTimeAt(element: Element, time: number, start: number): number {
   return (
