@@ -11,7 +11,8 @@ const disposers: Array<() => void> = [];
  */
 function playWithFrameSource({
   videoAttrs = 'data-start="0" data-duration="4"',
-}: { videoAttrs?: string } = {}) {
+  length,
+}: { videoAttrs?: string; length?: () => number | undefined } = {}) {
   resetRuntimeFixtureDom();
   document.body.innerHTML =
     '<div data-composition-id="main" data-root="true" data-duration="10">' +
@@ -27,6 +28,7 @@ function playWithFrameSource({
       element: cam,
       render: (sourceTime) => void asked.push(sourceTime),
       canPlayAt: () => canPlay.value,
+      length,
     }),
   );
   window.__timelines = { main: createMockTimeline(10) };
@@ -121,4 +123,19 @@ it("a frame source gives the source time it is asked for, trims and speed includ
 
   expect(window.__hf!.sourceTimeAt!(cam, 3)).toBeCloseTo(7);
   await vi.waitFor(() => expect(asked.at(-1)).toBeCloseTo(7));
+});
+
+it("a video the page gives no length lasts as long as its frame source says its source is", () => {
+  let length: number | undefined;
+  const { cam, playFor } = playWithFrameSource({
+    videoAttrs: 'data-start="1" data-media-start="2"',
+    length: () => length,
+  });
+  playFor(0.1);
+
+  length = 6;
+  cam.dispatchEvent(new Event("durationchange"));
+  playFor(0.1);
+
+  expect(window.__hf!.clipWindow!(cam)).toEqual({ start: 1, end: 5 });
 });

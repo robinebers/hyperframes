@@ -2,6 +2,7 @@ import { sourceTimeAt } from "../speedRamp";
 import { readElementRateSpec, readMediaStart } from "./playbackRate";
 import { registerSeekCompletion } from "./adapters/seek-dispatch";
 import { isClipOnScreenAt } from "./clipWindow";
+import { supplySourceLength } from "./sourceLength";
 import type { RuntimeDeterministicAdapter } from "./types";
 
 export interface FrameSource {
@@ -11,6 +12,8 @@ export interface FrameSource {
   render: (sourceTime: number, signal: AbortSignal) => void | PromiseLike<unknown>;
   /** Whether playback can go on from this source time; while false the film holds with Buffering. */
   canPlayAt?: (sourceTime: number) => boolean;
+  /** The source's length in seconds once known; announce it with a `durationchange` event on the element. */
+  length?: () => number | undefined;
   dispose?: () => void;
 }
 
@@ -104,10 +107,12 @@ export function registerFrameSource(source: FrameSource): () => void {
       controller.abort();
       pending = null;
       sources.delete(source.element);
+      supplySourceLength(source.element, undefined);
       source.dispose?.();
     },
   };
   sources.set(source.element, registered);
+  supplySourceLength(source.element, source.length);
   return registered.dispose;
 }
 
