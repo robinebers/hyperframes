@@ -12,7 +12,12 @@ const disposers: Array<() => void> = [];
 function playWithFrameSource({
   videoAttrs = 'data-start="0" data-duration="4"',
   length,
-}: { videoAttrs?: string; length?: () => number | undefined } = {}) {
+  received,
+}: {
+  videoAttrs?: string;
+  length?: () => number | undefined;
+  received?: () => number;
+} = {}) {
   resetRuntimeFixtureDom();
   document.body.innerHTML =
     '<div data-composition-id="main" data-root="true" data-duration="10">' +
@@ -29,6 +34,7 @@ function playWithFrameSource({
       render: (sourceTime) => void asked.push(sourceTime),
       canPlayAt: () => canPlay.value,
       length,
+      received,
     }),
   );
   window.__timelines = { main: createMockTimeline(10) };
@@ -87,6 +93,23 @@ it("a frame source that never can play stops holding the film after 8 s, as a cl
   expect(states.at(-1)).toEqual({ isPlaying: true, buffering: true });
 
   playFor(2);
+  expect(window.__player!.getTime()).toBeGreaterThan(0.5);
+  expect(states.at(-1)).toEqual({ isPlaying: true, buffering: false });
+});
+
+it("a frame source still receiving data keeps holding the film past 8 s", () => {
+  let bytes = 0;
+  const { states, playFor } = playWithFrameSource({ received: () => bytes });
+  window.__player!.play();
+
+  for (let s = 0; s < 12; s++) {
+    bytes += 1000;
+    playFor(1);
+  }
+  expect(window.__player!.getTime()).toBeLessThan(0.1);
+  expect(states.at(-1)).toEqual({ isPlaying: true, buffering: true });
+
+  playFor(9);
   expect(window.__player!.getTime()).toBeGreaterThan(0.5);
   expect(states.at(-1)).toEqual({ isPlaying: true, buffering: false });
 });

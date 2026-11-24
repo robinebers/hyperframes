@@ -94,6 +94,7 @@ import {
   createFrameSourceAdapter,
   frameSourceTimeAt,
   frameSourceWaitsAt,
+  frameSourceReceived,
   hasFrameSource,
 } from "./frameSources";
 import {
@@ -6368,7 +6369,7 @@ export function initSandboxRuntimeModular(): void {
   const holdsWithoutData = new WeakMap<HTMLMediaElement, HoldWithoutData>();
   const stoppedReceivingData = (el: HTMLMediaElement): boolean => {
     const now = performance.now();
-    let buffered = 0;
+    let buffered = frameSourceReceived(el) ?? 0;
     for (let i = 0; i < el.buffered.length; i++)
       buffered += el.buffered.end(i) - el.buffered.start(i);
     const hold = holdsWithoutData.get(el);

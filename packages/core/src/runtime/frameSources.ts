@@ -14,6 +14,8 @@ export interface FrameSource {
   canPlayAt?: (sourceTime: number) => boolean;
   /** The source's length in seconds once known; announce it with a `durationchange` event on the element. */
   length?: () => number | undefined;
+  /** Grows while the source still receives data; a hold ends 8 s after it last grew, as for a native clip. */
+  received?: () => number;
   dispose?: () => void;
 }
 
@@ -21,6 +23,7 @@ interface RegisteredSource {
   element: Element;
   ready: Promise<unknown>;
   canPlayAt?: (sourceTime: number) => boolean;
+  received?: () => number;
   seek: (time: number) => Promise<void>;
   dispose: () => void;
 }
@@ -31,6 +34,10 @@ export const hasFrameSources = (): boolean => sources.size > 0;
 
 /** A media element with a frame source is the source's to supply: the runtime never loads, seeks or plays it. */
 export const hasFrameSource = (element: object): boolean => sources.has(element as Element);
+
+/** What the element's frame source has received so far; undefined without one that says. */
+export const frameSourceReceived = (element: Element): number | undefined =>
+  sources.get(element)?.received?.();
 
 /** The source time an element shows at film time `time`, for an element that starts at `start`. */
 export function frameSourceTimeAt(element: Element, time: number, start: number): number {
@@ -95,6 +102,7 @@ export function registerFrameSource(source: FrameSource): () => void {
     element: source.element,
     ready,
     canPlayAt: source.canPlayAt,
+    received: source.received,
     seek(time) {
       pending = range
         ? range.start + Math.min(Math.max(0, time), Math.max(0, range.duration - 1 / range.fps))
