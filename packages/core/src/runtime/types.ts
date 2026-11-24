@@ -36,7 +36,8 @@ type RuntimeBridgeControlActionBase =
   | "set-play-range"
   | "stop-media"
   | "flash-elements"
-  | "scrub-audio";
+  | "scrub-audio"
+  | "audio-clock";
 
 type RuntimeBridgeControlMessageBase = {
   source: "hf-parent";
@@ -60,6 +61,8 @@ type RuntimeBridgeControlMessageBase = {
   grading?: RuntimeJson;
   compare?: RuntimeJson;
   seekMode?: "drag" | "commit";
+  rate?: number;
+  at?: number;
 };
 
 export type RuntimeStateMessage = {
