@@ -1,0 +1,6 @@
+mode	step	upstream	date	tag	title	result	files	hunks	lines	test_lines	clean_but_differs	typecheck	tests	silent_break
+b	1	b22af8f25	2026-11-02T23:48:00Z	-	chore(studio-server): raise the package size budget for the preview features (#7044)	conflict	frameSources.ts:1 init.ts:2 media.ts:1 mediaProxy.ts:1 window.d.ts:1	6	+11/-7	+1/-5	-	pass	pass (Tests 240 passed (240))	-
+b	2	651de1d94	2026-11-09T23:42:50Z	-	feat(cli): carry the motion blur summary on the @hf-result line (#7468)	conflict	frameSources.ts:2 init.ts:1 media.ts:2 mediaProxy.ts:1	6	+11/-7	+0/-0	-	pass	pass (Tests 254 passed (254))	-
+b	3	6f81d5481	2026-11-16T23:38:43Z	-	test(inspector): give the HTTP contract tests time for their server start-ups (#7984)	conflict	init.ts:1 preloadMedia.ts:2	3	+4/-3	+0/-0	-	pass	pass (Tests 272 passed (272))	-
+b	4	5336bddbf	2026-11-23T23:18:42Z	-	fix(studio): a sealed scale resize the frame can't measure leaves no box size behind (#862	conflict	init.ts:2 sourceLength.ts:1	3	+21/-6	+13/-0	-	pass	pass (Tests 287 passed (287))	-
+b	5	efef86580	2026-11-24T11:06:30Z	-	fix(skills): bake-basemap asks npm where global packages live, and says where it looked (#	conflict	init.ts:5 media.ts:1 mediaProxy.ts:3 preloadMedia.ts:4	13	+7/-2	+0/-0	-	pass	pass (Tests 297 passed (297))	-

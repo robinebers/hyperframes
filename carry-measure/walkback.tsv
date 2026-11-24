@@ -1,0 +1,83 @@
+step	stepped_over	date	author	title	new_base	result	conflicted_files
+1	1c20a107	2026-11-24T09:22:41Z	Miguel Ángel	fix(player): a sealed player plays media from hosts without CORS and names a missing runtime (#8142)	91027eaf	conflict	packages/core/src/runtime/media.ts packages/core/src/runtime/runtimeAttributes.ts packages/core/src/runtime/runtimeLoad.ts 
+2	c5e3ac89	2026-11-24T06:55:36Z	Miguel Ángel	fix(core): a one-shot Studio capture shows a 4K clip as the server's frame instead of decoding it (#8626)	4354b177	clean	
+3	66eeb13a	2026-11-24T04:18:05Z	Miguel Ángel	fix(core): a held clip shows its own frame, not black, while its lighter copy is made (#8618)	8cdf5b22	clean	
+4	e2fe0e6f	2026-11-24T01:58:38Z	Miguel Ángel	fix(core): the 4K clip on screen plays its own file while its preview copy is made (#8602)	c9f9a520	clean	
+5	32afb984	2026-11-23T20:31:30Z	Miguel Ángel	fix(core): looped audio plays in sync with the picture in Safari (#8612)	457cc569	clean	
+6	19f98a3e	2026-11-23T19:57:39Z	Miguel Ángel	fix(core): a film without a declared size reports its measured size to a sealed Studio (#8578)	d3c16bbe	clean	
+7	35a0d81c	2026-11-23T00:13:49Z	Miguel Ángel	fix(studio): a sealed preview that can't swap scenes reloads without asking first (#8544)	e51b7520	clean	
+8	87fddbc1	2026-11-22T17:32:43Z	Miguel Ángel	fix(player): a sealed film is heard when its frame may not start sound (#8495)	2425df5f	clean	
+9	c19d98d9	2026-11-22T16:40:09Z	Miguel Ángel	fix(player): a late timeline from the old film no longer keeps a switched player ready (#8500)	ec9a3a8e	clean	
+10	ec9a3a8e	2026-11-22T16:17:17Z	Miguel Ángel	fix(core): a sealed move inside a nested composition shows where it was dropped (#8517)	0bc7963f	clean	
+11	4a47c33e	2026-11-22T14:58:03Z	Miguel Ángel	fix(core): a far clip whose source is swapped learns its new length (#8509)	f03233ab	conflict	packages/core/src/runtime/init.ts 
+12	d4e8d6f9	2026-11-22T13:18:31Z	Miguel Ángel	fix(core): a preview of hundreds of clips with no set length no longer loads them all (#8303)	0e6879b8	conflict	packages/core/src/runtime/init.ts 
+13	104eab37	2026-11-22T10:55:49Z	Miguel Ángel	fix(core): a preview seek waits for each graded video to draw its new frame (#8488)	15484285	clean	
+14	5ae70826	2026-11-22T10:29:19Z	Miguel Ángel	fix(core): a far clip the runtime lets go of keeps counting in the film's length (#8480)	835e660e	conflict	packages/core/src/runtime/sourceLength.ts 
+15	d37563e3	2026-11-22T07:49:20Z	Miguel Ángel	fix(studio): hiding an element hides it in the preview, sealed or not (#8461)	56e0d6fb	clean	
+16	120689e3	2026-11-21T16:02:26Z	Robin Ebers	fix(player): stop the preview reloading itself after a quick seek, and stalling at cuts on a slower connection (#8339)	88f7d405	conflict	packages/core/src/runtime/init.ts packages/core/src/runtime/preloadMedia.ts 
+17	925a64db	2026-11-20T19:48:28Z	Robin Ebers	fix(player): stop films cut from one long recording freezing in apps that embed the player (#8243)	2161b505	clean	
+18	33272097	2026-11-20T07:35:20Z	Miguel Ángel	fix(core): a sub-composition's script re-run keeps the preview at its playhead (#8276)	95a8a91b	clean	
+19	ce0932e0	2026-11-20T05:57:26Z	Miguel Ángel	fix(studio): a video with no size of its own keeps its file's size while a lighter copy plays (#8233)	fdc7d676	clean	
+20	d106f9c8	2026-11-19T12:27:21Z	Miguel Ángel	fix: stop crashing on SVG elements named template (#8241)	def770ed	clean	
+21	1cf98cf8	2026-11-19T03:51:53Z	Miguel Ángel	fix(studio): a sealed preview's timeline shows its text clips' words and look (#8228)	4abbdc3e	clean	
+22	1929f299	2026-11-18T22:17:54Z	Miguel Ángel	fix(studio): a sealed preview keeps Studio's size, move and turn edits after a seek (#8212)	e0470b0a	clean	
+23	e9eac3f9	2026-11-18T20:17:21Z	Miguel Ángel	fix(core): a video with no size of its own keeps its file's size in the preview (#8211)	d205e594	clean	
+24	01331014	2026-11-18T06:15:41Z	Miguel Ángel	fix(core): a clip that stops downloading no longer holds the preview in Buffering forever (#8138)	3ee095bd	conflict	packages/core/src/runtime/init.ts 
+25	f1f8ca31	2026-11-17T17:26:46Z	Miguel Ángel	fix(core): hover and thumbnail captures never wait for a 4K clip's preview copy (#8079)	2749aafb	clean	
+26	a56fa2ca	2026-11-17T16:25:29Z	Miguel Ángel	fix(studio): scrubbing the playhead plays the music track in a sealed preview (#8082)	9797faea	clean	
+27	9797faea	2026-11-17T16:13:03Z	Santhi Prakash	fix(core): drop motion-blur state on __hfRuntimeTeardown (#7996)	e8659475	clean	
+28	33e1a36a	2026-11-16T21:54:40Z	Miguel Ángel	revert(player): an app embedding the preview re-reads it after a script edit again (#7795) (#7978)	45ff3526	clean	
+29	42508c1e	2026-11-16T18:15:46Z	Robin Ebers	fix(player): stop the preview freezing when many clips share one long recording (#7795)	5be6c158	clean	
+30	9e504877	2026-11-16T16:10:40Z	Miguel Ángel	fix(core): a capture page loads a clip with no set length only when it is due (#7938)	51ae9251	clean	
+31	ded5e3ee	2026-11-15T08:22:52Z	Michael Wang	perf: CSS url, @import, @font-face, style and comment scans run in linear time (#7809)	f667111d	clean	
+32	2f0ade18	2026-11-14T08:09:33Z	Miguel Ángel	fix(core): at full quality a 4K clip plays a copy at the size the preview shows it (#7723)	58ef24c6	clean	
+33	92816ed5	2026-11-14T02:04:23Z	Miguel Ángel	perf(core): a reloaded preview video resyncs only itself (#7684)	45882027	clean	
+34	f7b49f12	2026-11-14T01:54:54Z	Miguel Ángel	fix(core): free a preview clip's decoder when the playhead leaves it (#7679)	affa03b6	conflict	packages/core/src/runtime/init.ts 
+35	b8f630c6	2026-11-13T19:18:24Z	terencecho	fix(core): a looping preview keeps playing when a scene reloads during a hold for data (#7659)	d7202bd4	clean	
+36	ccdcf671	2026-11-13T18:56:47Z	Miguel Ángel	perf(core): open the preview's audio context when a clip with sound plays (#7658)	0c2384db	clean	
+37	303a4c47	2026-11-12T05:44:27Z	Miguel Ángel	fix(core): show a paused video frame with the same color as the playing video on Mac (#7584)	4fad43db	clean	
+38	6cc734fd	2026-11-11T23:01:58Z	Vance Ingalls	feat(core): motion blur preview draws fewer filter copies at lower preview quality (#7547)	6bd9bb8a	clean	
+39	ef5cdeb0	2026-11-11T16:54:46Z	James Russo	feat(core): give the preview parent a typed editing port to prepare for an opaque frame (#7556)	7a4dfb76	clean	
+40	cda84222	2026-11-10T15:18:22Z	Miguel Ángel	fix(core): Safari keeps a small file's preload and leaves a playing clip's source alone (#7498)	b0835262	conflict	packages/core/src/runtime/preloadMedia.ts 
+41	fecde999	2026-11-10T12:38:47Z	Miguel Ángel	perf(core): Safari stops a long video's clips from loading the whole file at once (#7436)	ec30de06	conflict	packages/core/src/runtime/preloadMedia.ts 
+42	a73572c3	2026-11-09T10:46:44Z	Miguel Ángel	fix(core): a video held on its tail is seeked once, not every frame (#7442)	c38ac543	clean	
+43	fa2e6351	2026-11-08T18:48:55Z	Miguel Ángel	fix(core): a muted video's picture no longer waits on its own audio track at a cut (#7412)	eb16510a	conflict	packages/core/src/runtime/media.ts 
+44	12906e0b	2026-11-08T12:18:11Z	Miguel Ángel	fix(core): capture pages load only the clips on screen (#7402)	074de9dd	clean	
+45	75fe18c6	2026-11-08T06:03:31Z	Miguel Ángel	fix(core): a set written before its tween no longer erases the tween's end (#7397)	0f5914dc	clean	
+46	3151fd21	2026-11-08T02:29:57Z	James Russo	fix(studio): bound recovery and verify full-quality playback (#7393)	fd05a386	clean	
+47	fd05a386	2026-11-08T02:26:53Z	Miguel Ángel	feat(core): preview health names the media element that held play (#7159)	26956ea1	clean	
+48	b7157bda	2026-11-08T00:17:12Z	James Russo	feat(studio): scrub full-quality video with decoded preview frames (#7379)	b87a01f6	conflict	packages/core/src/runtime/init.ts 
+49	b87a01f6	2026-11-07T23:29:21Z	James Russo	fix(core): retain complete preview pictures during native seeks (#7378)	34118d8f	clean	
+50	942893eb	2026-11-07T22:50:52Z	Miguel Ángel	fix(core): preview playback moves every frame between an audio track's time updates (#7373)	841e90ff	clean	
+51	841e90ff	2026-11-07T22:09:06Z	Miguel Ángel	fix(core): Safari video picture lands on the cut again, undoing the hidden pre-roll (#7383)	e0c11bf0	clean	
+52	a595755a	2026-11-07T18:16:25Z	Miguel Ángel	fix(core): a film moves on past a video the browser never starts loading (#7368)	59c2065d	clean	
+53	59c2065d	2026-11-07T18:06:55Z	Miguel Ángel	fix(producer): page timers during a render run on film time (#7362)	9efbbdf5	conflict	packages/core/src/runtime/init.ts packages/core/src/runtime/media.ts packages/core/src/runtime/mediaProxy.ts 
+54	9058fd1a	2026-11-07T09:16:39Z	Miguel Ángel	fix(core): skip a video the browser can't decode instead of freezing the film (#7355)	cf75dfd7	clean	
+55	1ddd4255	2026-11-07T02:46:21Z	Miguel Ángel	fix(core): words in a scene the preview mounts later keep their spaces (#7342)	25a61016	clean	
+56	3e86def5	2026-11-06T08:51:57Z	Miguel Ángel	fix(core): video starts a second early and catches up hidden, so the picture meets the cut (#7265)	41b7aeea	clean	
+57	cd7e93ba	2026-11-06T04:15:22Z	Vance Ingalls	fix(core): blur quiets discrete callbacks instead of undoing what they wrote (#7271)	a81b3441	clean	
+58	600bfa45	2026-11-05T16:53:59Z	Miguel Ángel	fix(core): decode WebKit sources by memory budget, not by length (#7232)	5377b756	clean	
+59	5377b756	2026-11-05T16:21:24Z	Miguel Ángel	fix(core): snapshot and preview show a clip on the frame render shows it (#7238)	d40d0b25	conflict	packages/core/src/runtime/frameSources.ts 
+60	b7a8cfa7	2026-11-05T11:05:51Z	Miguel Ángel	fix(core): keep long WebKit sources and unloaded clips on the audio clock (#7225)	ecf0e143	clean	
+61	b96d3c8b	2026-11-05T09:39:37Z	Miguel Ángel	fix(core): a multi-worker render replays overlapping tweens behind the timeline stand-in (#7231)	659ef568	clean	
+62	071ec1fd	2026-11-05T02:15:44Z	kevin	fix(runtime): fail readiness waits when a buildReady promise rejects (#5746)	33c17df5	clean	
+63	e2a65358	2026-11-05T01:52:51Z	Miguel Ángel	fix(core): a paused preview lets go of the scenes it has unmounted (#7195)	2372fc34	clean	
+64	3d78ac0f	2026-11-04T19:11:32Z	Miguel Ángel	fix(core): a logo image no longer renders stretched to the frame bottom (#7179)	d4e4b07e	clean	
+65	47dddedd	2026-11-03T11:17:40Z	Miguel Ángel	fix(core): Safari audio frozen after its cut is pulled onto the playhead at 0.5 s behind, not 1 s (#7082)	2daedcda	clean	
+66	eb356296	2026-11-03T00:23:50Z	Miguel Ángel	feat(preview): an unplayable video shows its own frame while its copy is made (#6589)	b22af8f2	clean	
+67	e8ffaa41	2026-11-02T17:47:44Z	Miguel Ángel	fix(core): preview recovers its WebGL scenes and effects after a lost context (#7028)	4c1c1782	clean	
+68	c25e0921	2026-11-02T16:46:47Z	Miguel Ángel	fix(core): Safari audio is ready at the cut, and a stuck one resyncs in 1 s (#7024)	c14d92a2	clean	
+69	036e41fa	2026-11-02T13:15:47Z	Miguel Ángel	fix(core): iPhone Safari keeps one connection per file for the take on screen and the next (#7012)	cd598426	clean	
+70	aaa5b63f	2026-11-02T09:24:45Z	Miguel Ángel	fix(core): keep media prefetch queue ordered (#6996)	43f8b1a3	clean	
+71	26d6e3ee	2026-11-02T07:50:16Z	Miguel Ángel	fix(engine): a scene that has ended gives up its WebGL context so the next scene is not slowed (#6984)	5fca4356	conflict	packages/core/src/runtime/init.ts packages/core/src/runtime/window.d.ts 
+72	e5b10f8b	2026-11-02T07:15:45Z	Miguel Ángel	feat(core): a heavy clip's lighter copy can be made ahead of time (#6982)	870569a4	clean	
+73	6bbda219	2026-11-02T04:41:07Z	Miguel Ángel	fix(core): a smaller preview copy nobody wants any more no longer swaps in (#6973)	8519f283	clean	
+74	8519f283	2026-11-02T04:14:40Z	Miguel Ángel	fix(core): a preview video short of data holds the film instead of looping snippets (#6974)	7f48a689	conflict	packages/core/src/runtime/init.ts packages/core/src/runtime/media.ts 
+75	89a59531	2026-11-01T16:55:53Z	Miguel Ángel	fix(core): music keeps playing while a preview video swaps to a new copy (#6937)	f9e8cab6	conflict	packages/core/src/runtime/init.ts 
+76	6b3e7a7a	2026-11-01T14:50:41Z	Miguel Ángel	fix(cli): check and snapshot free video clips the playhead left, halving memory on cut films (#6929)	439d0178	clean	
+77	af0d68d6	2026-11-01T12:00:26Z	Miguel Ángel	fix(core): a resized preview video keeps its picture while its new copy loads (#6922)	9aaa3ae6	conflict	packages/core/src/runtime/mediaProxy.ts 
+78	e181d34e	2026-11-01T03:53:30Z	Miguel Ángel	feat(core): WebKit plays bare audio from a decoded buffer on the audio clock (#6912)	2c1a10f3	clean	
+79	bba3676a	2026-10-31T23:29:33Z	Miguel Ángel	feat(core): the playback health reading says which clock the film followed (#6906)	5ce6b30b	clean	
+80	1e5413f3	2026-10-31T16:48:36Z	Miguel Ángel	fix(core): a stuck seek in check or snapshot fails named before the protocol timeout (#6596)	5c92fb07	conflict	packages/core/src/runtime/frameSources.ts 
+81	0c16afd9	2026-10-31T16:12:24Z	Miguel Ángel	fix(core): Safari stops chopping audio by seeking it over and over during playback (#6854)	a04b45a6	clean	
+82	5e4f5aef	2026-10-30T18:21:27-07:00	Vance Ingalls	fix(core): motion blur preview no longer slows down later in the timeline (#6865)	f2358315	clean	

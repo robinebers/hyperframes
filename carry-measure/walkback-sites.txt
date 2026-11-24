@@ -1,0 +1,3 @@
+f7b49f12 -        el.preload = "none";
+cda84222 -    openLongSourceAtInPoint(media, later, () => (media.preload = authoredPreload));
+fecde999 -      (el as HTMLMediaElement).preload = "none";
