@@ -90,7 +90,7 @@ import { createGoogleMapsAdapter } from "./adapters/google-maps";
 import { createMaplibreAdapter } from "./adapters/maplibre";
 import { createD3Adapter } from "./adapters/d3";
 import { createTypegpuAdapter } from "./adapters/typegpu";
-import { createFrameSourceAdapter } from "./frameSources";
+import { createFrameSourceAdapter, frameSourceWaitsAt } from "./frameSources";
 import {
   patchVideoTextureCompat,
   patchWebGLVideoTextureCompat,
@@ -6381,9 +6381,8 @@ export function initSandboxRuntimeModular(): void {
           .filter(
             ({ el, start, end }) =>
               isInClipWindow(t, start, end) &&
-              !ready(el) &&
+              (frameSourceWaitsAt(el, t, start) ?? (!ready(el) && isPlayableTrack(el))) &&
               !stoppedReceivingData(el) &&
-              isPlayableTrack(el) &&
               !stillStandsIn(el) &&
               !pausedFrames.retained(el) &&
               !webAudio.ownsElement(el),

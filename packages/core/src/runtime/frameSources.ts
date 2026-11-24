@@ -9,12 +9,15 @@ export interface FrameSource {
   ready?: PromiseLike<unknown>;
   sourceRange?: { start: number; duration: number; fps: number };
   render: (sourceTime: number, signal: AbortSignal) => void | PromiseLike<unknown>;
+  /** Whether playback can go on from this source time; while false the film holds with Buffering. */
+  canPlayAt?: (sourceTime: number) => boolean;
   dispose?: () => void;
 }
 
 interface RegisteredSource {
   element: Element;
   ready: Promise<unknown>;
+  canPlayAt?: (sourceTime: number) => boolean;
   seek: (time: number) => Promise<void>;
   dispose: () => void;
 }
@@ -22,6 +25,23 @@ interface RegisteredSource {
 const sources = new Map<Element, RegisteredSource>();
 
 export const hasFrameSources = (): boolean => sources.size > 0;
+
+/** The source time an element shows at film time `time`, for an element that starts at `start`. */
+function frameSourceTimeAt(element: Element, time: number, start: number): number {
+  return (
+    readMediaStart(element) + sourceTimeAt(readElementRateSpec(element), Math.max(0, time - start))
+  );
+}
+
+/** Whether the element's frame source cannot play on from film time `time`; undefined without one that says. */
+export function frameSourceWaitsAt(
+  element: Element,
+  time: number,
+  start: number,
+): boolean | undefined {
+  const canPlayAt = sources.get(element)?.canPlayAt;
+  return canPlayAt && !canPlayAt(frameSourceTimeAt(element, time, start));
+}
 
 /** Bind a frame source to a timed host. Unregister before replacing its source. */
 export function registerFrameSource(source: FrameSource): () => void {
@@ -68,6 +88,7 @@ export function registerFrameSource(source: FrameSource): () => void {
   const registered: RegisteredSource = {
     element: source.element,
     ready,
+    canPlayAt: source.canPlayAt,
     seek(time) {
       pending = range
         ? range.start + Math.min(Math.max(0, time), Math.max(0, range.duration - 1 / range.fps))
@@ -138,10 +159,10 @@ export function createFrameSourceAdapter(timing: {
           timing.compositionDuration(),
         );
         if (!onScreen) continue;
-        const localTime = Math.max(0, time - start);
-        const sourceTime =
-          readMediaStart(element) + sourceTimeAt(readElementRateSpec(element), localTime);
-        registerSeekCompletion(source.seek(sourceTime), "frame-source");
+        registerSeekCompletion(
+          source.seek(frameSourceTimeAt(element, time, start)),
+          "frame-source",
+        );
       }
     },
     getReadyPromise: () => {
