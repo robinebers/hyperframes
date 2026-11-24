@@ -6300,6 +6300,15 @@ export function initSandboxRuntimeModular(): void {
     // 1. WebAudio (AudioContext.currentTime) while it plays a decoded buffer: ~21µs, sample-accurate
     // 2. HTMLMediaElement (audio.currentTime): ~33ms, frame-accurate
     // 3. Monotonic (performance.now()): ~1ms, no audio coupling
+    const parentClock = state.parentAudioClock;
+    if (clock.isPlaying() && parentClock) {
+      const elapsed = (performance.timeOrigin + performance.now() - parentClock.at) / 1000;
+      clock.attachAudioSource({
+        currentTimeSeconds: parentClock.time + elapsed * parentClock.rate,
+        webAudio: true,
+      });
+      return;
+    }
     if (clock.isPlaying() && !state.mediaOutputMuted) {
       if (
         !state.nativeMediaSyncDisabled &&
@@ -6830,6 +6839,8 @@ export function initSandboxRuntimeModular(): void {
       }
     },
     onSeek: (timeSeconds, _seekMode) => {
+      // The parent's clock was anchored before the seek; it re-posts one once its buffers start again.
+      state.parentAudioClock = null;
       player.seek(timeSeconds);
       emitAnalyticsEvent("composition_seeked", { time: timeSeconds });
     },
@@ -6891,6 +6902,10 @@ export function initSandboxRuntimeModular(): void {
       } else {
         syncMediaForCurrentState();
       }
+    },
+    onAudioClock: (sample) => {
+      state.parentAudioClock = sample;
+      if (!sample && clock.hasAudioSource()) clock.detachAudioSource();
     },
     onSetWebAudioMediaDisabled: (disabled) => {
       if (state.webAudioMediaDisabled === disabled) return;
