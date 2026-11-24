@@ -90,7 +90,7 @@ import { createGoogleMapsAdapter } from "./adapters/google-maps";
 import { createMaplibreAdapter } from "./adapters/maplibre";
 import { createD3Adapter } from "./adapters/d3";
 import { createTypegpuAdapter } from "./adapters/typegpu";
-import { createFrameSourceAdapter, frameSourceWaitsAt } from "./frameSources";
+import { createFrameSourceAdapter, frameSourceTimeAt, frameSourceWaitsAt } from "./frameSources";
 import {
   patchVideoTextureCompat,
   patchWebGLVideoTextureCompat,
@@ -3936,6 +3936,8 @@ export function initSandboxRuntimeModular(): void {
       timelineRegistry: window.__timelines ?? {},
       resolver: timingResolverFor(true),
     });
+  window.__hf.sourceTimeAt = (element, time) =>
+    frameSourceTimeAt(element, time, resolveStartForElement(element, 0));
   window.__hf.audioMeter = {
     start: () => webAudio.startMetering(),
     stop: () => webAudio.stopMetering(),

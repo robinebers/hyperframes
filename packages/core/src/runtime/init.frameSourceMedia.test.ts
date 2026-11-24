@@ -88,3 +88,15 @@ it("a frame source that never can play stops holding the film after 8 s, as a cl
   expect(window.__player!.getTime()).toBeGreaterThan(0.5);
   expect(states.at(-1)).toEqual({ isPlaying: true, buffering: false });
 });
+
+it("a frame source gives the source time it is asked for, trims and speed included, to the page", async () => {
+  const { cam, canPlay, asked, playFor } = playWithFrameSource({
+    videoAttrs: 'data-start="2" data-duration="4" data-media-start="5" data-playback-rate="2"',
+  });
+  canPlay.value = true;
+  window.__player!.seek(3);
+  playFor(0.1);
+
+  expect(window.__hf!.sourceTimeAt!(cam, 3)).toBeCloseTo(7);
+  await vi.waitFor(() => expect(asked.at(-1)).toBeCloseTo(7));
+});

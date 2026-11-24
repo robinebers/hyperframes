@@ -27,7 +27,7 @@ const sources = new Map<Element, RegisteredSource>();
 export const hasFrameSources = (): boolean => sources.size > 0;
 
 /** The source time an element shows at film time `time`, for an element that starts at `start`. */
-function frameSourceTimeAt(element: Element, time: number, start: number): number {
+export function frameSourceTimeAt(element: Element, time: number, start: number): number {
   return (
     readMediaStart(element) + sourceTimeAt(readElementRateSpec(element), Math.max(0, time - start))
   );
