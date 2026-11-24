@@ -2,7 +2,7 @@ import { sourceTimeAt } from "../speedRamp";
 import { readElementRateSpec, readMediaStart } from "./playbackRate";
 import { registerSeekCompletion } from "./adapters/seek-dispatch";
 import { isClipOnScreenAt } from "./clipWindow";
-import { supplySourceLength } from "./sourceLength";
+import { sourceLengthOf, supplySourceLength } from "./sourceLength";
 import type { RuntimeDeterministicAdapter } from "./types";
 
 export interface FrameSource {
@@ -39,11 +39,14 @@ export const hasFrameSource = (element: object): boolean => sources.has(element 
 export const frameSourceReceived = (element: Element): number | undefined =>
   sources.get(element)?.received?.();
 
-/** The source time an element shows at film time `time`, for an element that starts at `start`. */
+/** The source time an element shows at film time `time`, for an element that starts at `start`; `loop` wraps it. */
 export function frameSourceTimeAt(element: Element, time: number, start: number): number {
-  return (
-    readMediaStart(element) + sourceTimeAt(readElementRateSpec(element), Math.max(0, time - start))
-  );
+  const mediaStart = readMediaStart(element);
+  const target = mediaStart + sourceTimeAt(readElementRateSpec(element), Math.max(0, time - start));
+  const length = sourceLengthOf(element as HTMLMediaElement);
+  return (element as HTMLMediaElement).loop && length > mediaStart && target >= length
+    ? mediaStart + ((target - mediaStart) % (length - mediaStart))
+    : target;
 }
 
 /** Whether the element's frame source cannot play on from film time `time`; undefined without one that says. */

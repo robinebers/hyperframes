@@ -148,6 +148,17 @@ it("a frame source gives the source time it is asked for, trims and speed includ
   await vi.waitFor(() => expect(asked.at(-1)).toBeCloseTo(7));
 });
 
+it("a looping video's frame source is asked for source times that wrap at its length", () => {
+  const { cam, playFor } = playWithFrameSource({
+    videoAttrs: 'data-start="0" data-duration="8" data-media-start="1" loop',
+    length: () => 4,
+  });
+  playFor(0.1);
+
+  expect(window.__hf!.sourceTimeAt!(cam, 2)).toBeCloseTo(3);
+  expect(window.__hf!.sourceTimeAt!(cam, 4)).toBeCloseTo(2);
+});
+
 it("a video the page gives no length lasts as long as its frame source says its source is", () => {
   let length: number | undefined;
   const { cam, playFor } = playWithFrameSource({
