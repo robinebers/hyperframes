@@ -46,7 +46,7 @@ import {
 } from "../colorLuts";
 import { copyMediaVisualStyles } from "../inline-scripts/parityContract";
 import { readVariablesForElement } from "./variableScope";
-import { mediaElementTime } from "./mediaClock";
+import { isWebKit, mediaElementTime } from "./mediaClock";
 import { swallow } from "./diagnostics";
 import { createRecordFilter } from "./mutationRecords";
 import { findInjectedRenderFrame } from "./renderFrameSibling";
@@ -3979,7 +3979,35 @@ export function createColorGradingRuntime(pausedMediaLease?: {
     refresh();
   };
 
+  const ownContextRenderer = (element: ColorGradingMediaElement): ColorGradingRenderer | null => {
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false });
+    const program = gl && createProgramResources(gl);
+    if (!gl || !program) {
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+      return null;
+    }
+    canvas.addEventListener("webglcontextlost", () => {
+      const idle = idleRenderers.findIndex((renderer) => renderer.canvas === canvas);
+      if (idle >= 0) idleRenderers.splice(idle, 1);
+      const entry = trackedEntries().find((tracked) => tracked.canvas === canvas);
+      if (!entry) return;
+      entry.contextLost = true;
+      removeElement(entry.element);
+    });
+    return {
+      canvas: attachCanvas(canvas, element),
+      glCanvas: canvas,
+      gl,
+      program,
+      effectTargets: null,
+      kuwaharaTargets: null,
+      effectError: null,
+    };
+  };
+
   const newRenderer = (element: ColorGradingMediaElement): ColorGradingRenderer | null => {
+    if (isWebKit()) return ownContextRenderer(element);
     const context = sharedContext();
     const program = context && createProgramResources(context.gl);
     if (!context || !program) return null;
@@ -4084,7 +4112,7 @@ export function createColorGradingRuntime(pausedMediaLease?: {
     const renderer = detachEntry(entry);
     if (renderer) {
       if (entry.contextLost || idleRenderers.length >= MAX_IDLE_COLOR_GRADING_RENDERERS) {
-        destroyProgramResources(renderer);
+        destroyProgramResources(renderer, renderer.glCanvas === renderer.canvas);
       } else {
         idleRenderers.push(renderer);
       }
@@ -4316,7 +4344,8 @@ export function createColorGradingRuntime(pausedMediaLease?: {
     observer = null;
     for (const element of trackedElements) removeElement(element);
     hiddenAtRefresh.clear();
-    for (const renderer of idleRenderers) destroyProgramResources(renderer);
+    for (const renderer of idleRenderers)
+      destroyProgramResources(renderer, renderer.glCanvas === renderer.canvas);
     idleRenderers.length = 0;
     shared?.gl.getExtension("WEBGL_lose_context")?.loseContext();
     shared = null;
